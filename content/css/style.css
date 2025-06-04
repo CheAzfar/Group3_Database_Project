@@ -1,0 +1,194 @@
+/* Image aign on mobile */
+@media (max-width: 768px) {
+    .hero-image {
+        text-align: center;
+        margin-top: 1rem;
+    }
+
+    .hero-image img {
+        max-width: 80%;
+    }
+    .popular-dishes {
+        margin-bottom: 30% !important;
+    }
+}
+
+/* Custom navbar styling */
+.custom-navbar {
+    background-color: #F4A261 !important;
+    padding: 0.5rem 1rem;
+}
+
+/* Navbar brand/text styling */
+.custom-navbar .navbar-brand {
+    color: #fff !important;
+    font-weight: 600;
+    font-size: 1.5rem;
+}
+
+/* Search button styling */
+.custom-navbar .btn-outline-dark {
+    color: #fff;
+    border-color: #E76F51;
+}
+
+.custom-navbar .btn-outline-dark:hover {
+    background-color: #E76F51;
+    color: white;
+}
+
+/* Search input field styling */
+.custom-navbar .form-control {
+    border-color: #E76F51;
+}
+.custom-navbar a {
+    color: white !important;
+    text-decoration: none !important;
+}
+
+/* Style for icons */
+.custom-navbar a i {
+    color: white !important;
+    margin-right: 5px;
+}
+
+/* Hover effect - light opacity */
+.custom-navbar a:hover {
+    opacity: 0.9;
+}
+
+.nav-spacing a {
+    margin: 0 30px !important;
+}
+
+.hero-section {
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+/* Styling for the heading */
+.hero-section h1 {
+    color: #F4A261;
+}
+
+/* Styling for the ORDER NOW button */
+.hero-section .btn-order {
+    background-color: #E76F51;
+    border: none;
+    color: white;
+}
+
+/*hover effect */
+.hero-section .btn-order:hover {
+    background-color: #d65b3f;
+    color: white;
+}
+/* Click (active) effect */
+.hero-section .btn-order:active {
+    background-color: #F4A261 !important;
+}
+
+/* Buy Now Button */
+.btn-buy {
+    background-color: #F4A261 !important;
+    border-color: #d65b3f !important;
+}
+
+.btn-add {
+    color: #F4A261 !important;
+    border-color: #d65b3f !important;
+}
+.btn-buy:hover {
+    background-color: #d65b3f !important;
+    border-color: #F4A261 !important;
+}
+
+.btn-add:hover {
+    background-color: #d65b3f !important;
+    color: #fff !important;
+    border-color: #F4A261 !important;
+}
+
+/* Popular Dishes Card Outline */
+.popular-dishes .card.dish-card {
+    border: 3px solid #E76F51;
+}
+
+/* Smooth Popular Dishes Card animation */
+.popular-dishes .dish-card {
+    transition: transform 0.3s ease;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05); 
+    border: 3px solid #E76F51 !important; 
+}
+
+.popular-dishes .dish-card:hover {
+    transform: translateY(-10px); /* Lift effect */
+    box-shadow: 0 15px 30px rgba(0,0,0,0.1); /* Enhanced shadow on hover */
+    border-color: #F4A261 !important; /* Change border color on hover */
+}
+
+/* Optional: Add smooth transition to the border color */
+.popular-dishes .dish-card {
+    transition: all 0.3s ease; /* Now affects transform, shadow AND border */
+}
+
+.popular-dishes h2 {
+    color: #E76F51;
+}
+
+/* Card Image size */
+.popular-dishes .card-img-top {
+    max-width: 70%;   
+    height: auto;     /* keep aspect ratio */
+    margin: 15px auto 0;   /* center horizontally */
+    display: block;   /* required for margin auto to work */
+}
+
+/* Service Card Image size */
+.services-section {
+    background-color: #f8f9fa;
+}
+
+.service-card {
+    transition: transform 0.3s ease;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+}
+
+.service-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+}
+
+.service-icon {
+    color: #F4A261;
+}
+
+.btn-outline-warning {
+    border-color: #F4A261;
+    color: #F4A261;
+}
+
+.btn-outline-warning:hover {
+    background-color: #F4A261;
+    color: white;
+}
+
+/* Footer CSS */
+footer {
+    background-color: #2a2a2a; /* dark background */
+    color: #f4a261; /* your orange accent */
+}
+
+footer a {
+    color: #f4a261;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+footer a:hover {
+    color: #e76f51;
+}
+
+
