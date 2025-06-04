@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Index</title>
-    <link rel="stylesheet" href="http://localhost/DB/content/css/style.css">
+    <link rel="stylesheet" href="http://localhost/Group3_Database_Project/DB/content/css/style.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
-    <?php include($_SERVER['DOCUMENT_ROOT']."/DB/content/pages/header.php"); ?>
+    <?php include($_SERVER['DOCUMENT_ROOT']."/Group3_Database_Project/DB/content/pages/header.php"); ?>
     <!-- Hero Section -->
     <section class="hero-section py-5">
         <div class="container">
@@ -22,7 +22,7 @@
                 </div>
                 <!-- Image Content -->
                 <div class="hero-image ms-md-5">
-                    <img src="/DB/assets/images/menu-default.png" class="img-fluid" alt="Menu Image" style="max-width: 400px;">
+                    <img src="/Group3_Database_Project/DB/assets/images/menu-default.png" class="img-fluid" alt="Menu Image" style="max-width: 400px;">
                 </div>
             </div>
         </div>
@@ -37,7 +37,7 @@
                 <!-- Dish 1 -->
                 <div class="col-md-4">
                     <div class="card dish-card">
-                        <img src="/DB/assets/images/menu-default.png" class="card-img-top" alt="Dish 1">
+                        <img src="/Group3_Database_Project/DB/assets/images/menu-default.png" class="card-img-top" alt="Dish 1">
                         <div class="card-body">
                             <h5 class="card-title">Dish Name 1</h5>
                             <p class="card-text">Description of the dish.</p>
@@ -52,7 +52,7 @@
                 <!-- Dish 2 -->
                 <div class="col-md-4">
                     <div class="card dish-card">
-                        <img src="/DB/assets/images/menu-default.png" class="card-img-top" alt="Dish 2">
+                        <img src="/Group3_Database_Project/DB/assets/images/menu-default.png" class="card-img-top" alt="Dish 2">
                         <div class="card-body">
                             <h5 class="card-title">Dish Name 2</h5>
                             <p class="card-text">Description of the dish.</p>
@@ -66,7 +66,7 @@
                 <!-- Dish 3 -->
                 <div class="col-md-4">
                     <div class="card dish-card">
-                        <img src="/DB/assets/images/menu-default.png" class="card-img-top" alt="Dish 3">
+                        <img src="/Group3_Database_Project/DB/assets/images/menu-default.png" class="card-img-top" alt="Dish 3">
                         <div class="card-body">
                             <h5 class="card-title">Dish Name 3</h5>
                             <p class="card-text">Description of the dish.</p>
@@ -136,7 +136,7 @@
             </div>
         </div>
     </section>
-    <?php include($_SERVER['DOCUMENT_ROOT']."/DB/content/pages/footer.php"); ?>
+    <?php include($_SERVER['DOCUMENT_ROOT']."/Group3_Database_Project/DB/content/pages/footer.php"); ?>
 
     <!-- Bootstrap JS Bundle with Popper (for navbar toggling) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js"></script>
