@@ -12,10 +12,10 @@
             <!-- Collapsible Content -->
             <div class="collapse navbar-collapse" id="navbarContent">
                 <div class="d-flex flex-column flex-lg-row align-items-start align-items-lg-center nav-spacing ms-lg-auto">
-                    <a href="#" class="me-lg-3 mb-2 mb-lg-0"><i class="fa-solid fa-house me-1"></i> Home</a>
-                    <a href="#" class="me-lg-3 mb-2 mb-lg-0"><i class="fa-solid fa-cart-shopping me-1"></i> Cart</a>
-                    <a href="#" class="me-lg-3 mb-2 mb-lg-0"><i class="fa-solid fa-bell-concierge me-1"></i> Service</a>
-                    <a href="#" class="me-lg-3 mb-2 mb-lg-0"><i class="fa-solid fa-book-open me-1"></i> Menu</a>
+                    <a href="index.php" class="me-lg-3 mb-2 mb-lg-0"><i class="fa-solid fa-house me-1"></i> Home</a>
+                    <a href="cart.php" class="me-lg-3 mb-2 mb-lg-0"><i class="fa-solid fa-cart-shopping me-1"></i> Cart</a>
+                    <a href="index.php#servicesSection" class="me-lg-3 mb-2 mb-lg-0"><i class="fa-solid fa-bell-concierge me-1"></i> Service</a>
+                    <a href="index.php#foodMenuAccordion" class="me-lg-3 mb-2 mb-lg-0"><i class="fa-solid fa-book-open me-1"></i> Menu</a>
                 </div>
 
                 <!-- Search form (mobile: stacks below links) -->

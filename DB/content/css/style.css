@@ -177,7 +177,81 @@
     background-color: #F4A261;
     color: white;
 }
+/* ------------------------ */
+/* Add to Cart Page Styles  */
+/* ------------------------ */
+.cart-title {
+    font-weight: bold;
+    color: #e76f51;
+}
 
+.item-img {
+    width: 60px;
+    border-radius: 50%;
+}
+
+.quantity-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+.quantity-box button {
+    width: 30px;
+    height: 30px;
+    border: 1px solid #e76f51;
+    background: none;
+    color: #e76f51;
+    border-radius: 4px;
+}
+
+.remove-btn {
+    color: #e76f51;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.order-summary {
+    background-color: #ffe9dd;
+    padding: 20px;
+    border-radius: 8px;
+}
+
+.btn-order {
+    background-color: #e76f51;
+    color: white;
+    border: none;
+}
+
+.btn-order:hover {
+    background-color: #d65b3f;
+}
+
+.summary-divider {
+    border-top: 1px solid #e76f51;
+    margin: 1rem 0;
+}
+.order-type .form-check-input {
+    accent-color: #E76F51;
+}
+
+.order-type label {
+    color: #333;
+}
+
+.order-type h6 {
+    color: #E76F51;
+}
+.btn-group label {
+    width: 50%;
+    text-align: center;
+}
+
+
+/* ------------------------ */
+/* Footer Page Styles  */
+/* ------------------------ */
 /* Footer CSS */
 footer {
     background-color: #2a2a2a; /* dark background */

@@ -8,8 +8,9 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
-<body>
+<body class="d-flex flex-column min-vh-100">
     <?php include($_SERVER['DOCUMENT_ROOT']."/Group3_Database_Project/DB/content/pages/header.php"); ?>
+    <main class="flex-fill">
     <!-- Hero Section -->
     <section class="hero-section py-5">
         <div class="container">
@@ -82,7 +83,7 @@
     </section>
 
     <!-- Food Menu Section -->
-    <section class="food-menu-section py-5">
+    <section id="foodMenuAccordion" class="food-menu-section py-5">
         <div class="container">
             <h2 class="text-center mb-5 text-warning">FOOD MENU</h2>
             <div class="accordion custom-accordion" id="foodMenuAccordion">
@@ -285,7 +286,7 @@
     </section>
 
     <!-- Services Section -->
-    <section class="services-section py-5 bg-light">
+    <section id="servicesSection" class="services-section py-5 bg-light">
         <div class="container">
             <h2 class="text-center mb-5">Our Services</h2>
             
@@ -340,6 +341,7 @@
             </div>
         </div>
     </section>
+    </main>
     <?php include($_SERVER['DOCUMENT_ROOT']."/Group3_Database_Project/DB/content/pages/footer.php"); ?>
 
     <!-- Bootstrap JS Bundle with Popper (for navbar toggling) -->
