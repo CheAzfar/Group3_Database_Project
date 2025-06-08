@@ -9,7 +9,7 @@
         max-width: 80%;
     }
     .popular-dishes {
-        margin-bottom: 30% !important;
+        margin-bottom: 15% !important;
     }
 }
 
@@ -44,6 +44,7 @@
 .custom-navbar a {
     color: white !important;
     text-decoration: none !important;
+    transition: opacity 0.3s ease, color 0.3s ease;
 }
 
 /* Style for icons */
@@ -116,7 +117,7 @@
 
 /* Smooth Popular Dishes Card animation */
 .popular-dishes .dish-card {
-    transition: transform 0.3s ease;
+    transition: all 0.3s ease;
     box-shadow: 0 5px 15px rgba(0,0,0,0.05); 
     border: 3px solid #E76F51 !important; 
 }
@@ -127,21 +128,17 @@
     border-color: #F4A261 !important; /* Change border color on hover */
 }
 
-/* Optional: Add smooth transition to the border color */
-.popular-dishes .dish-card {
-    transition: all 0.3s ease; /* Now affects transform, shadow AND border */
-}
-
 .popular-dishes h2 {
     color: #E76F51;
 }
 
 /* Card Image size */
 .popular-dishes .card-img-top {
-    max-width: 70%;   
-    height: auto;     /* keep aspect ratio */
-    margin: 15px auto 0;   /* center horizontally */
-    display: block;   /* required for margin auto to work */
+    width: 100%;
+    height: 400px;
+    object-fit: cover;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
 }
 
 /* Service Card Image size */
@@ -247,6 +244,17 @@
     width: 50%;
     text-align: center;
 }
+/* ------------------------ */
+/* Food Menu Section Styles */
+/* ------------------------ */
+.dish-card .card-img-top {
+    width: 100%;
+    height: 400px;
+    object-fit: cover;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+}
+
 
 
 /* ------------------------ */
