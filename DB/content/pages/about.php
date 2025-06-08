@@ -7,40 +7,6 @@
     <link rel="stylesheet" href="http://localhost/Group3_Database_Project/DB/content/css/style.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <style>
-        .hero-about {
-            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('http://localhost/Group3_Database_Project/DB/assets/images/AboutBanner.jpg');
-            background-size: cover;
-            background-position: center;
-            height: 60vh;
-            display: flex;
-            align-items: center;
-            color: white;
-        }
-        .flavor-card {
-            transition: transform 0.3s;
-            border: none;
-            border-radius: 15px;
-            overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-        .flavor-card:hover {
-            transform: translateY(-10px);
-        }
-        .flavor-icon {
-            font-size: 2.5rem;
-            color: #ff6b35;
-            margin-bottom: 1rem;
-        }
-        .about-img {
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        }
-        .signature-dish {
-            border-left: 5px solid #ff6b35;
-            padding-left: 20px;
-        }
-    </style>
 </head>
 <body class="d-flex flex-column min-vh-100">
     <?php include($_SERVER['DOCUMENT_ROOT']."/Group3_Database_Project/DB/content/pages/header.php"); ?>
