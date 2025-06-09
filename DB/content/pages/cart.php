@@ -1,21 +1,56 @@
+<?php
+session_start();
+
+// Initialize cart
+if (!isset($_SESSION['cart'])) {
+    $_SESSION['cart'] = [];
+}
+$cart = $_SESSION['cart'];
+
+// Handle quantity update
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['item_id'], $_POST['action'])) {
+    $itemId = $_POST['item_id'];
+    $action = $_POST['action'];
+
+    if (isset($cart[$itemId])) {
+        if ($action === 'increase') {
+            $cart[$itemId]['quantity']++;
+        } elseif ($action === 'decrease') {
+            $cart[$itemId]['quantity']--;
+            if ($cart[$itemId]['quantity'] < 1) {
+                unset($cart[$itemId]);
+            }
+        }
+        $_SESSION['cart'] = $cart; // Save back to session
+        header("Location: cart.php");
+        exit();
+    }
+}
+
+// Calculate total
+$total = 0;
+foreach ($cart as $item) {
+    $total += $item['price'] * $item['quantity'];
+}
+?>
+
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Index</title>
+    <title>Cart</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="http://localhost/Group3_Database_Project/DB/content/css/style.css">
+    <link rel="stylesheet" href="/Group3_Database_Project/DB/content/css/style.css">
 </head>
 <body class="d-flex flex-column min-vh-100">
-    <?php include($_SERVER['DOCUMENT_ROOT']."/Group3_Database_Project/DB/content/pages/header.php"); ?>
-    
-    <main class="flex-fill">
+<?php include($_SERVER['DOCUMENT_ROOT']."/Group3_Database_Project/DB/content/pages/header.php"); ?>
+
+<main class="flex-fill">
     <div class="container py-5">
         <h2 class="cart-title mb-4">Add To Cart</h2>
         <div class="row">
-            <!-- Cart List -->
             <div class="col-lg-8">
                 <table class="table">
                     <thead>
@@ -28,73 +63,63 @@
                     </tr>
                     </thead>
                     <tbody>
-                    <tr>
-                        <td><input type="checkbox" class="item-checkbox" checked></td>
-                        <td>
-                            <div class="d-flex align-items-center">
-                                <img src="/Group3_Database_Project/DB/assets/images/menu-default.png" class="item-img me-2" alt="Nasi Lemak Ayam">
-                                <span>Nasi Lemak Ayam</span>
-                            </div>
-                        </td>
-                        <td>RM 4.00</td>
-                        <td>
-                            <div class="quantity-box">
-                                <button>-</button>
-                                <span>1</span>
-                                <button>+</button>
-                            </div>
-                        </td>
-                        <td class="remove-btn">X</td>
-                    </tr>
-                    <tr>
-                        <td><input type="checkbox" class="item-checkbox"></td>
-                        <td>
-                            <div class="d-flex align-items-center">
-                                <img src="/Group3_Database_Project/DB/assets/images/menu-default.png" class="item-img me-2" alt="Nasi Lemak Ayam">
-                                <span>Nasi Lemak Ayam</span>
-                            </div>
-                        </td>
-                        <td>RM 4.00</td>
-                        <td>
-                            <div class="quantity-box">
-                                <button>-</button>
-                                <span>1</span>
-                                <button>+</button>
-                            </div>
-                        </td>
-                        <td class="remove-btn">X</td>
-                    </tr>
+                    <?php foreach ($cart as $id => $item): ?>
+                        <tr>
+                            <td>
+                                <input type="checkbox" class="item-checkbox" checked
+                                       data-price="<?= $item['price'] ?>"
+                                       data-quantity="<?= $item['quantity'] ?>">
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <img src="/Group3_Database_Project/DB/assets/<?= htmlspecialchars($item['image_url']) ?>"
+                                         class="item-img me-2" alt="<?= htmlspecialchars($item['name']) ?>">
+                                    <span><?= htmlspecialchars($item['name']) ?></span>
+                                </div>
+                            </td>
+                            <td>RM <?= number_format($item['price'], 2) ?></td>
+                            <td>
+                                <div class="quantity-box">
+                                    <form method="POST" style="display: flex; align-items: center; gap: 5px;">
+                                        <input type="hidden" name="item_id" value="<?= $id ?>">
+                                        <button type="submit" name="action" value="decrease"
+                                                class="btn btn-sm btn-outline-secondary"
+                                            <?= $item['quantity'] <= 1 ? '' : '' ?>>-</button>
+                                        <span class="mx-2"><?= $item['quantity'] ?></span>
+                                        <button type="submit" name="action" value="increase"
+                                                class="btn btn-sm btn-outline-secondary">+</button>
+                                    </form>
+                                </div>
+                            </td>
+                            <td>RM <?= number_format($item['price'] * $item['quantity'], 2) ?></td>
+                        </tr>
+                    <?php endforeach; ?>
                     </tbody>
                 </table>
             </div>
 
-            <!-- Order Summary -->
             <div class="col-lg-4">
                 <div class="order-summary">
                     <h5 class="fw-bold mb-3">Order Summary</h5>
                     <div class="d-flex justify-content-between">
                         <span>Subtotal</span>
-                        <span>RM 16.00</span>
-                    </div>
-                    <div class="d-flex justify-content-between">
-                        <span>Total</span>
-                        <span>RM 16.00</span>
+                        <span id="cart-total">RM <?= number_format($total, 2) ?></span>
                     </div>
 
                     <div class="summary-divider"></div>
 
                     <div class="d-flex justify-content-between fw-bold mb-3">
                         <span>Total</span>
-                        <span>RM 16.00</span>
+                        <span id="cart-total-final">RM <?= number_format($total, 2) ?></span>
                     </div>
 
                     <div class="order-type mt-4">
                         <h6 class="fw-bold mb-2">Order Type:</h6>
-                        <div class="btn-group w-100" role="group" aria-label="Order Type">
-                            <input type="radio" class="btn-check" name="orderType" id="pickupOption" value="pickup" autocomplete="off" checked>
+                        <div class="btn-group w-100" role="group">
+                            <input type="radio" class="btn-check" name="orderType" id="pickupOption" value="pickup" checked>
                             <label class="btn btn-outline-warning" for="pickupOption">Pickup</label>
 
-                            <input type="radio" class="btn-check" name="orderType" id="dineInOption" value="dine-in" autocomplete="off">
+                            <input type="radio" class="btn-check" name="orderType" id="dineInOption" value="dine-in">
                             <label class="btn btn-outline-warning" for="dineInOption">Dine-In</label>
                         </div>
                     </div>
@@ -103,30 +128,46 @@
             </div>
         </div>
     </div>
-    </main>
+</main>
 
-    <?php include($_SERVER['DOCUMENT_ROOT']."/Group3_Database_Project/DB/content/pages/footer.php"); ?>
+<?php include($_SERVER['DOCUMENT_ROOT']."/Group3_Database_Project/DB/content/pages/footer.php"); ?>
 
-    <!-- Bootstrap JS Bundle with Popper -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js"></script>
-
-    <!-- Select All Checkbox Script -->
-    <script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js"></script>
+<script>
     document.addEventListener("DOMContentLoaded", function () {
         const selectAllCheckbox = document.getElementById("selectAll");
         const itemCheckboxes = document.querySelectorAll(".item-checkbox");
+        const cartTotalDisplay = document.getElementById("cart-total");
+        const cartTotalFinal = document.getElementById("cart-total-final");
+
+        function updateTotal() {
+            let total = 0;
+            itemCheckboxes.forEach(cb => {
+                if (cb.checked) {
+                    const price = parseFloat(cb.dataset.price);
+                    const quantity = parseInt(cb.dataset.quantity);
+                    total += price * quantity;
+                }
+            });
+            cartTotalDisplay.textContent = "RM " + total.toFixed(2);
+            cartTotalFinal.textContent = "RM " + total.toFixed(2);
+        }
 
         selectAllCheckbox.addEventListener("change", function () {
             itemCheckboxes.forEach(cb => cb.checked = selectAllCheckbox.checked);
+            updateTotal();
         });
 
         itemCheckboxes.forEach(cb => {
             cb.addEventListener("change", function () {
                 const allChecked = [...itemCheckboxes].every(c => c.checked);
                 selectAllCheckbox.checked = allChecked;
+                updateTotal();
             });
         });
+
+        updateTotal();
     });
-    </script>
+</script>
 </body>
 </html>

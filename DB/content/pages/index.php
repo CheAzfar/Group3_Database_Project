@@ -1,8 +1,9 @@
 <?php
+session_start();
 
 function getPopularDishes($conn) {
     // Get 3 random dishes as "popular" - modify query as needed
-    $query = "SELECT * FROM menu_items ORDER BY RAND() LIMIT 3";
+    $query = "SELECT * FROM menu_items ORDER BY popularity_score DESC LIMIT 3";
     $result = $conn->query($query);
     
     // Fallback if query fails
@@ -12,7 +13,6 @@ function getPopularDishes($conn) {
     }
     return $result;
 }
-
 ?>
 
 <!DOCTYPE html>
@@ -27,6 +27,7 @@ function getPopularDishes($conn) {
 </head>
 <body class="d-flex flex-column min-vh-100">
     <?php
+        include($_SERVER['DOCUMENT_ROOT']."/Group3_Database_Project/DB/content/pages/connection.php");
         include($_SERVER['DOCUMENT_ROOT']."/Group3_Database_Project/DB/content/pages/menu.php");
         include($_SERVER['DOCUMENT_ROOT']."/Group3_Database_Project/DB/content/pages/header.php");
     ?>
@@ -40,7 +41,7 @@ function getPopularDishes($conn) {
                 <div class="text-content mb-4 mb-md-0">
                     <h1 class="display-3 fw-bold mb-3">PUAN ZAI HIGHWAY</h1>
                     <p class="lead mb-4">Raso Pahang, Ori Tok Tambah!</p>
-                    <button class="btn btn-order btn-lg">ORDER NOW</button>
+                    <button class="btn btn-order btn-lg" onclick="window.location.href='/Group3_Database_Project/DB/index.php#foodMenuAccordion'">ORDER NOW</button>
                 </div>
                 <!-- Image Content -->
                 <div class="hero-image ms-md-5">
@@ -67,10 +68,17 @@ function getPopularDishes($conn) {
                             <img src="<?= htmlspecialchars($imagePath) ?>" class="card-img-top" alt="<?= htmlspecialchars($dish['name']) ?>">
                             <div class="card-body">
                                 <h5 class="card-title"><?= htmlspecialchars($dish['name']); ?></h5>
-                                <p class="card-text"><?= htmlspecialchars($dish['price']); ?></p>
+                                <p class="card-text">RM <?= htmlspecialchars($dish['price']); ?></p>
                                 <div class="d-flex gap-5 justify-content-around">
                                     <a href="#" class="btn btn-primary btn-buy">Buy Now</a>
-                                    <a href="#" class="btn btn-outline-primary btn-add">Add to Cart</a>
+                                    <!-- ✅ Add to Cart Form -->
+                                    <form method="POST" action="/Group3_Database_Project/DB/content/pages/add_to_cart.php">
+                                        <input type="hidden" name="item_id" value="<?= $dish['item_id'] ?>">
+                                        <input type="hidden" name="name" value="<?= htmlspecialchars($dish['name']) ?>">
+                                        <input type="hidden" name="price" value="<?= $dish['price'] ?>">
+                                        <input type="hidden" name="image_url" value="<?= $dish['image_url'] ?>">
+                                        <button type="submit" class="btn btn-outline-primary btn-add">Add to Cart</button>
+                                    </form>
                                 </div>
                             </div>
                         </div>
@@ -194,7 +202,7 @@ function getPopularDishes($conn) {
                         </div>
                         <h4 class="mb-3">Reserve Your Own Table</h4>
                         <p>Book in advance to guarantee your dining experience</p>
-                        <a href="#" class="btn btn-outline-warning mt-auto">Book Now</a>
+                        <!-- <a href="#" class="btn btn-outline-warning mt-auto">Book Now</a> -->
                     </div>
                 </div>
                 
@@ -206,7 +214,7 @@ function getPopularDishes($conn) {
                         </div>
                         <h4 class="mb-3">Pickup Advance Order</h4>
                         <p>Order ahead and pick up your food without waiting</p>
-                        <a href="#" class="btn btn-outline-warning mt-auto">Order Now</a>
+                        <!-- <a href="#" class="btn btn-outline-warning mt-auto">Order Now</a> -->
                     </div>
                 </div>
                 
@@ -218,7 +226,7 @@ function getPopularDishes($conn) {
                         </div>
                         <h4 class="mb-3">Self Service From Your Table</h4>
                         <p>Use our app to order directly from your table</p>
-                        <a href="#" class="btn btn-outline-warning mt-auto">Learn More</a>
+                        <!-- <a href="#" class="btn btn-outline-warning mt-auto">Learn More</a> -->
                     </div>
                 </div>
                 
@@ -230,7 +238,7 @@ function getPopularDishes($conn) {
                         </div>
                         <h4 class="mb-3">Our Services</h4>
                         <p>Discover all the ways we can serve you better</p>
-                        <a href="#" class="btn btn-outline-warning mt-auto">View All</a>
+                        <!-- <a href="#" class="btn btn-outline-warning mt-auto">View All</a> -->
                     </div>
                 </div>
             </div>
