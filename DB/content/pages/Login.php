@@ -1,3 +1,12 @@
+<?php
+// Start session and check for errors passed from login_Form.php
+session_start();
+$error = '';
+if (isset($_SESSION['login_error'])) {
+    $error = $_SESSION['login_error'];
+    unset($_SESSION['login_error']); // Clear the error after displaying
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -75,7 +84,7 @@
             text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
         }
         
-        .login-form {
+        .login-Form {
             display: flex;
             flex-direction: column;
         }
@@ -163,6 +172,17 @@
             text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
         }
         
+        .error-message {
+            color: #d9534f;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            text-align: center;
+            display: <?php echo $error ? 'block' : 'none'; ?>;
+        }
+        
         @media (max-width: 768px) {
             .container {
                 flex-direction: column;
@@ -187,21 +207,20 @@
             <h1 class="welcome-back">Welcome Back!</h1>
             <h2 class="portal-title">Admin Portal – Authorized Personnel Only</h2>
             
-            <form class="login-form" action="/login" method="POST">
+            <?php if ($error): ?>
+                <div class="error-message"><?php echo $error; ?></div>
+            <?php endif; ?>
+
+            <form class="login-Form" action="login_Form.php" method="POST">
                 <div class="form-group">
                     <label for="username">Username</label>
-                    <input type="text" id="username" name="username" required>
+                    <input type="text" id="UserID" name="UserID" required>
                 </div>
                 
                 <div class="form-group">
                     <label for="password">Password</label>
-                    <input type="password" id="password" name="password" required>
-                </div>
-                
-                <div class="remember-me">
-                    <input type="checkbox" id="remember" name="remember">
-                    <label for="remember">Remember Me</label>
-                </div>
+                    <input type="password" id="UserPwd" name="UserPwd" required>
+                </div><br>
                 
                 <button type="submit" class="login-btn">Login</button>
             </form>

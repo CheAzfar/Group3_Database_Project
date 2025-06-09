@@ -170,7 +170,7 @@
             <h2 class="fw-bold mb-4">Ready to Taste the Difference?</h2>
             <p class="lead mb-4">Visit us today and experience authentic Malaysian seafood at its finest</p>
             <div class="d-flex justify-content-center gap-3">
-                <a href="#" class="btn btn-dark btn-lg px-4">View Menu</a>
+                <a href="index.php" class="btn btn-dark btn-lg px-4">View Menu</a>
             </div>
         </div>
     </section>
