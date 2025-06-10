@@ -16,7 +16,7 @@
                     <a href="cart.php" class="me-lg-3 mb-2 mb-lg-0"><i class="fa-solid fa-cart-shopping me-1"></i> Cart</a>
                     <a href="index.php#servicesSection" class="me-lg-3 mb-2 mb-lg-0"><i class="fa-solid fa-bell-concierge me-1"></i> Service</a>
                     <a href="index.php#foodMenuAccordion" class="me-lg-3 mb-2 mb-lg-0"><i class="fa-solid fa-book-open me-1"></i> Menu</a>
-                    <a href="index.php#aboutUs" class="me-lg-3 mb-2 mb-lg-0"><i class="fa-solid fa-circle-info me-1"></i> About Us</a>
+                    <a href="about.php" class="me-lg-3 mb-2 mb-lg-0"><i class="fa-solid fa-circle-info me-1"></i> About Us</a>
                     <a href="/Group3_Database_Project/DB/content/pages/logout.php" class="me-lg-3 mb-2 mb-lg-0"><i class="fa-solid fa-right-from-bracket me-1"></i> Log Out</a>
                 </div>
 
