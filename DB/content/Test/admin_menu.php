@@ -1,131 +1,174 @@
 <?php
 require_once 'db_connect.php';
 session_start();
+include($_SERVER['DOCUMENT_ROOT']."/Group3_Database_Project/DB/content/pages/connection.php");
+
+// Function to handle file upload with custom naming and directory structure
+function handleCustomFileUpload($file, $category, $itemName, $oldImageUrl = '') {
+    // Category to folder mapping
+    $category_folders = [
+        'Traditional Beverages' => 'traditionalBeverages',
+        'Snacks & Appetizers' => 'snacksNappetizers',
+        'Rice & Noodles' => 'riceNnoodles',
+        'Proteins & Sides' => 'proteinsNsides',
+        'Fresh & Cold' => 'freshNcold',
+        'Desserts' => 'desserts'
+    ];
+    
+    $folder_name = $category_folders[$category] ?? strtolower(str_replace(' ', '', $category));
+    
+    // Base directory for uploads - Now includes /menu/ subdirectory
+    $base_dir = $_SERVER['DOCUMENT_ROOT'] . '/Group3_Database_Project/DB/assets/menu/';
+    $upload_dir = $base_dir . $folder_name . '/';
+    
+    // Create directory if it doesn't exist
+    if (!file_exists($upload_dir)) {
+        mkdir($upload_dir, 0755, true);
+    }
+    
+    // Clean the item name for filename (remove special characters, spaces, etc.)
+    $clean_name = preg_replace('/[^a-zA-Z0-9]/', '', strtolower($itemName));
+    $filename = $clean_name . '.png';
+    $file_path = $upload_dir . $filename;
+    
+    // Delete old image if exists and different from new path
+    if ($oldImageUrl && $oldImageUrl !== 'menu/' . $folder_name . '/' . $filename) {
+        $old_file_path = $_SERVER['DOCUMENT_ROOT'] . '/Group3_Database_Project/DB/assets/' . $oldImageUrl;
+        if (file_exists($old_file_path) && strpos($oldImageUrl, 'menu-default.png') === false) {
+            unlink($old_file_path);
+        }
+    }
+    
+    // Handle different image types and convert to PNG
+    $temp_file = $file['tmp_name'];
+    $file_type = mime_content_type($temp_file);
+    
+    switch ($file_type) {
+        case 'image/jpeg':
+            $source = imagecreatefromjpeg($temp_file);
+            break;
+        case 'image/png':
+            $source = imagecreatefrompng($temp_file);
+            break;
+        case 'image/gif':
+            $source = imagecreatefromgif($temp_file);
+            break;
+        case 'image/webp':
+            $source = imagecreatefromwebp($temp_file);
+            break;
+        default:
+            throw new Exception("Unsupported image type. Please upload JPEG, PNG, GIF, or WebP images.");
+    }
+    
+    if (!$source) {
+        throw new Exception("Failed to process the uploaded image.");
+    }
+    
+    // Save as PNG
+    if (imagepng($source, $file_path)) {
+        imagedestroy($source);
+        return 'menu/' . $folder_name . '/' . $filename;
+    } else {
+        imagedestroy($source);
+        throw new Exception("Failed to save the image file.");
+    }
+}
 
 // Handle CRUD operations
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    try {
-        // Create new item
-        if (isset($_POST['create'])) {
-            $category = $_POST['category'];
-            $image_url = !empty($_FILES['image']['name']) 
-                ? handleFileUpload($_FILES['image'], $category, '') 
-                : '/Group3_Database_Project/DB/assets/images/menu-default.png';
-
-            $stmt = $pdo->prepare("INSERT INTO menu_items (name, image_url, price, available, category, popularity_score) 
-                                 VALUES (?, ?, ?, ?, ?, ?)");
-            $stmt->execute([
-                $_POST['name'],
-                $image_url,
-                $_POST['price'],
-                isset($_POST['available']) ? 1 : 0,
-                $category,
-                $_POST['popularity_score']
-            ]);
-            $_SESSION['message'] = "Item added successfully!";
-        }
-
-		// Update item
-		if (isset($_POST['update'])) {
-			$category = $_POST['category'];
-			$stmt = $pdo->prepare("SELECT image_url, category FROM menu_items WHERE item_id = ?");
-			$stmt->execute([$_POST['item_id']]);
-			$existing = $stmt->fetch(PDO::FETCH_ASSOC);
-			
-			// Handle file upload if new image was provided
-			if (!empty($_FILES['image']['name'])) {
-				$image_url = handleFileUpload($_FILES['image'], $category, $existing['image_url']);
-			} 
-			// Handle category change without new image
-			elseif ($category !== $existing['category']) {
-				$old_path = UPLOAD_BASE_DIR . str_replace(UPLOAD_BASE_URL, '', $existing['image_url']);
-				
-				// Only proceed if the old file exists and isn't the default image
-				if (file_exists($old_path) && $existing['image_url'] != '/Group3_Database_Project/DB/assets/images/menu-default.png') {
-					// Get the filename from the old path
-					$filename = basename($existing['image_url']);
-					
-					// Create the new directory path based on the new category
-					$category_folders = [
-						'Traditional Beverages' => 'traditionalBeverages',
-						'Snacks & Appetizers' => 'snacksNappetizers',
-						'Rice & Noodles' => 'riceNnoodles',
-						'Proteins & Sides' => 'proteinsNsides',
-						'Fresh & Cold' => 'freshNcold',
-						'Desserts' => 'desserts'
-					];
-					$folder_name = $category_folders[$category] ?? strtolower(str_replace(' ', '', $category));
-					$new_dir = UPLOAD_BASE_DIR . $folder_name . '/';
-					
-					// Create new directory if it doesn't exist
-					if (!file_exists($new_dir)) {
-						mkdir($new_dir, 0755, true);
-					}
-					
-					// New full path
-					$new_path = $new_dir . $filename;
-					
-					// Move the file
-					if (rename($old_path, $new_path)) {
-						$image_url = UPLOAD_BASE_URL . $folder_name . '/' . $filename;
-					} else {
-						// If move fails, keep the old path
-						$image_url = $existing['image_url'];
-						$_SESSION['error'] = "Could not move file to new category directory, but other changes were saved.";
-					}
-				} else {
-					// File doesn't exist or is default image - keep current URL
-					$image_url = $existing['image_url'];
-				}
-			} 
-			// No changes to image or category
-			else {
-				$image_url = $existing['image_url'];
-			}
-
-			$stmt = $pdo->prepare("UPDATE menu_items SET 
-								 name = ?, image_url = ?, price = ?, available = ?, 
-								 category = ?, popularity_score = ? 
-								 WHERE item_id = ?");
-			$stmt->execute([
-				$_POST['name'],
-				$image_url,
-				$_POST['price'],
-				isset($_POST['available']) ? 1 : 0,
-				$category,
-				$_POST['popularity_score'],
-				$_POST['item_id']
-			]);
-			$_SESSION['message'] = "Item updated successfully!";
-		}
+    
+    // Handle DELETE operation
+    if (isset($_POST['delete']) && isset($_POST['item_id'])) {
+        $item_id = $_POST['item_id'];
         
-        // Delete item
-        if (isset($_POST['delete'])) {
-            // First get image URL to delete the file
+        try {
+            // First get the item to delete its image file
             $stmt = $pdo->prepare("SELECT image_url FROM menu_items WHERE item_id = ?");
-            $stmt->execute([$_POST['item_id']]);
-            $image_url = $stmt->fetchColumn();
-
-            // Delete the record
-            $stmt = $pdo->prepare("DELETE FROM menu_items WHERE item_id = ?");
-            $stmt->execute([$_POST['item_id']]);
-
-            // Delete the image file if it's not the default
-            if ($image_url && strpos($image_url, 'menu-default.png') === false) {
-                $file_path = UPLOAD_DIR . basename($image_url);
-                if (file_exists($file_path)) {
-                    unlink($file_path);
+            $stmt->execute([$item_id]);
+            $item = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($item && !empty($item['image_url'])) {
+                $image_path = $_SERVER['DOCUMENT_ROOT'] . '/Group3_Database_Project/DB/assets/' . $item['image_url'];
+                if (file_exists($image_path) && strpos($item['image_url'], 'menu-default.png') === false) {
+                    unlink($image_path);
                 }
             }
-
-            $_SESSION['message'] = "Item deleted successfully!";
+            
+            // Delete from database
+            $stmt = $pdo->prepare("DELETE FROM menu_items WHERE item_id = ?");
+            if ($stmt->execute([$item_id])) {
+                $_SESSION['message'] = "Menu item deleted successfully.";
+            } else {
+                $_SESSION['error'] = "Error deleting menu item.";
+            }
+        } catch (PDOException $e) {
+            $_SESSION['error'] = "Database error: " . $e->getMessage();
         }
-    } catch (Exception $e) {
-        $_SESSION['error'] = $e->getMessage();
+        
+        // Redirect to prevent form resubmission
+        header("Location: admin_menu.php");
+        exit();
     }
     
+    // Handle CREATE and UPDATE operations
+    $name = $_POST['name'] ?? '';
+    $price = $_POST['price'] ?? '';
+    $category = $_POST['category'] ?? '';
+    $available = isset($_POST['available']) ? 1 : 0;
+    $popularity_score = $_POST['popularity_score'] ?? 0;
+    $image_url = null;
+
+    // Image upload handling
+    if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
+        try {
+            $old_image_url = $_POST['current_image'] ?? '';
+            $image_url = handleCustomFileUpload($_FILES['image'], $category, $name, $old_image_url);
+        } catch (Exception $e) {
+            $_SESSION['error'] = "Image upload error: " . $e->getMessage();
+            header("Location: admin_menu.php");
+            exit();
+        }
+    }
+
+    // Handle UPDATE operation
+    if (isset($_POST['update']) && isset($_POST['item_id'])) {
+        $item_id = $_POST['item_id'];
+
+        try {
+            if ($image_url !== null) {
+                // Update including image
+                $stmt = $pdo->prepare("UPDATE menu_items SET name = ?, price = ?, category = ?, available = ?, popularity_score = ?, image_url = ? WHERE item_id = ?");
+                $stmt->execute([$name, $price, $category, $available, $popularity_score, $image_url, $item_id]);
+            } else {
+                // Update without changing image
+                $stmt = $pdo->prepare("UPDATE menu_items SET name = ?, price = ?, category = ?, available = ?, popularity_score = ? WHERE item_id = ?");
+                $stmt->execute([$name, $price, $category, $available, $popularity_score, $item_id]);
+            }
+
+            $_SESSION['message'] = "Menu item updated successfully.";
+        } catch (PDOException $e) {
+            $_SESSION['error'] = "Error updating menu item: " . $e->getMessage();
+        }
+
+    // Handle CREATE operation
+    } elseif (isset($_POST['create'])) {
+        try {
+            if ($image_url === null) {
+                $image_url = ""; // Store empty string if no image
+            }
+
+            $stmt = $pdo->prepare("INSERT INTO menu_items (name, price, category, available, popularity_score, image_url) VALUES (?, ?, ?, ?, ?, ?)");
+            $stmt->execute([$name, $price, $category, $available, $popularity_score, $image_url]);
+
+            $_SESSION['message'] = "New menu item added successfully.";
+        } catch (PDOException $e) {
+            $_SESSION['error'] = "Error adding menu item: " . $e->getMessage();
+        }
+    }
+    
+    // Redirect to prevent form resubmission
     header("Location: admin_menu.php");
-    exit;
+    exit();
 }
 
 // Sorting parameters
@@ -225,6 +268,7 @@ $categories = [
                     <div class="col-md-6">
                         <label for="name" class="form-label">Item Name</label>
                         <input type="text" class="form-control" id="name" name="name" required>
+                        <div class="form-text">The image will be saved as: [clean_name].png</div>
                     </div>
                     
                     <div class="col-md-6">
@@ -233,6 +277,7 @@ $categories = [
                             <span id="file-upload-label">Choose file...</span>
                             <input type="file" class="file-upload-input" id="image" name="image" accept="image/*">
                         </div>
+                        <div class="form-text">Accepts JPEG, PNG, GIF, WebP. Will be converted to PNG.</div>
                         <div class="mt-2">
                             <img id="image-preview" src="/Group3_Database_Project/DB/assets/images/menu-default.png" 
                                  alt="Preview" class="img-thumbnail" style="max-width: 150px;">
@@ -260,11 +305,12 @@ $categories = [
                                 <option value="<?= $cat ?>"><?= $cat ?></option>
                             <?php endforeach; ?>
                         </select>
+                        <div class="form-text" id="category-path">Select category to see folder path</div>
                     </div>
                     
                     <div class="col-md-3">
                         <label for="popularity_score" class="form-label">Popularity Score</label>
-                        <input type="number" class="form-control" id="popularity_score" name="popularity_score" min="0" required>
+                        <input type="number" class="form-control" id="popularity_score" name="popularity_score" min="0" value="0" required>
                     </div>
                     
                     <div class="col-12">
@@ -301,7 +347,7 @@ $categories = [
                 <tbody>
                     <?php foreach ($menu_items as $item): 
                         $imagePath = !empty($item['image_url'])
-                            ? $item['image_url']
+                            ? '/Group3_Database_Project/DB/assets/' . $item['image_url']
                             : '/Group3_Database_Project/DB/assets/images/menu-default.png';
                     ?>
                     <tr>
@@ -326,10 +372,9 @@ $categories = [
                                     onclick="loadEditForm(<?= $item['item_id'] ?>, '<?= $imagePath ?>')">
                                 <i class="fas fa-edit"></i> Edit
                             </button>
-                            <form method="POST" action="admin_menu.php" style="display: inline;">
+                            <form method="POST" action="admin_menu.php" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this item?')">
                                 <input type="hidden" name="item_id" value="<?= $item['item_id'] ?>">
-                                <button type="submit" name="delete" class="btn btn-sm btn-danger" 
-                                        onclick="return confirm('Are you sure you want to delete this item?')">
+                                <button type="submit" name="delete" class="btn btn-sm btn-danger">
                                     <i class="fas fa-trash-alt"></i> Delete
                                 </button>
                             </form>
@@ -352,11 +397,13 @@ $categories = [
                 <form method="POST" action="admin_menu.php" id="editForm" enctype="multipart/form-data">
                     <div class="modal-body">
                         <input type="hidden" name="item_id" id="edit_item_id">
+                        <input type="hidden" name="current_image" id="edit_current_image">
                         
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label for="edit_name" class="form-label">Item Name</label>
                                 <input type="text" class="form-control" id="edit_name" name="name" required>
+                                <div class="form-text">Changes will update the filename</div>
                             </div>
                             
                             <div class="col-md-6">
@@ -365,9 +412,9 @@ $categories = [
                                     <span id="edit-file-upload-label">Choose file...</span>
                                     <input type="file" class="file-upload-input" id="edit_image" name="image" accept="image/*">
                                 </div>
+                                <div class="form-text">Leave empty to keep current image</div>
                                 <div class="mt-2">
                                     <img id="edit_image_preview" src="" alt="Preview" class="img-thumbnail" style="max-width: 150px;">
-                                    <input type="hidden" id="edit_current_image" name="current_image">
                                 </div>
                             </div>
                             
@@ -392,6 +439,7 @@ $categories = [
                                         <option value="<?= $cat ?>"><?= $cat ?></option>
                                     <?php endforeach; ?>
                                 </select>
+                                <div class="form-text" id="edit-category-path">Category changes will move the file</div>
                             </div>
                             
                             <div class="col-md-3">
@@ -413,6 +461,56 @@ $categories = [
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
+        // Category to folder mapping for display
+        const categoryFolders = {
+            'Traditional Beverages': 'traditionalBeverages',
+            'Snacks & Appetizers': 'snacksNappetizers',
+            'Rice & Noodles': 'riceNnoodles',
+            'Proteins & Sides': 'proteinsNsides',
+            'Fresh & Cold': 'freshNcold',
+            'Desserts': 'desserts'
+        };
+        
+        // Function to clean name for filename preview
+        function cleanName(name) {
+            return name.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+        }
+        
+        // Update category path display
+        function updateCategoryPath(selectElement, pathElement) {
+            const category = selectElement.value;
+            const nameInput = selectElement.closest('form').querySelector('input[name="name"]');
+            const name = nameInput ? nameInput.value : '';
+            
+            if (category && categoryFolders[category]) {
+                const cleanedName = cleanName(name);
+                const path = cleanedName ? 
+                    `assets/menu/${categoryFolders[category]}/${cleanedName}.png` : 
+                    `assets/menu/${categoryFolders[category]}/[item_name].png`;
+                pathElement.textContent = `Path: ${path}`;
+            } else {
+                pathElement.textContent = 'Select category to see folder path';
+            }
+        }
+        
+        // Add event listeners for add form
+        document.getElementById('category').addEventListener('change', function() {
+            updateCategoryPath(this, document.getElementById('category-path'));
+        });
+        
+        document.getElementById('name').addEventListener('input', function() {
+            updateCategoryPath(document.getElementById('category'), document.getElementById('category-path'));
+        });
+        
+        // Add event listeners for edit form
+        document.getElementById('edit_category').addEventListener('change', function() {
+            updateCategoryPath(this, document.getElementById('edit-category-path'));
+        });
+        
+        document.getElementById('edit_name').addEventListener('input', function() {
+            updateCategoryPath(document.getElementById('edit_category'), document.getElementById('edit-category-path'));
+        });
+
         // Function to load data into edit form
         function loadEditForm(itemId, currentImagePath) {
             fetch('get_item.php?id=' + itemId)
@@ -427,6 +525,9 @@ $categories = [
                     document.getElementById('edit_popularity_score').value = item.popularity_score;
                     document.getElementById('edit_current_image').value = item.image_url;
                     
+                    // Update category path
+                    updateCategoryPath(document.getElementById('edit_category'), document.getElementById('edit-category-path'));
+                    
                     // Show current image preview
                     const preview = document.getElementById('edit_image_preview');
                     if (currentImagePath) {
@@ -438,7 +539,11 @@ $categories = [
                         document.getElementById('edit-file-upload-label').textContent = 'Choose file...';
                     }
                 })
-                .catch(error => console.error('Error:', error));
+                .catch(error => {
+                    console.error('Error:', error);
+                    // Fallback: populate from the current row data
+                    alert('Could not load item details. Please try again.');
+                });
         }
 
         // File upload handling for add form
