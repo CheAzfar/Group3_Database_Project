@@ -28,7 +28,7 @@ define('UPLOAD_BASE_URL', '/Group3_Database_Project/DB/assets/menu/');
  */
 function handleFileUpload($file, $category, $existing_file = '') {
     if ($file['error'] !== UPLOAD_ERR_OK) {
-        return $existing_file; // Return existing file if no new file uploaded
+        throw new Exception("File upload error: " . $file['error']);
     }
 
     // Validate file type and size
@@ -59,7 +59,9 @@ function handleFileUpload($file, $category, $existing_file = '') {
     // Create category folder if it doesn't exist
     $category_dir = UPLOAD_BASE_DIR . $folder_name . '/';
     if (!file_exists($category_dir)) {
-        mkdir($category_dir, 0755, true);
+        if (!mkdir($category_dir, 0755, true)) {
+            throw new Exception("Failed to create directory for category.");
+        }
     }
 
     // Keep original filename but ensure it's safe
@@ -76,16 +78,17 @@ function handleFileUpload($file, $category, $existing_file = '') {
     }
 
     if (!move_uploaded_file($file['tmp_name'], $destination)) {
-        throw new Exception("Failed to upload file.");
+        throw new Exception("Failed to move uploaded file.");
     }
 
     // Delete old file if it exists
     if (!empty($existing_file) && $existing_file != '/Group3_Database_Project/DB/assets/images/menu-default.png') {
-        $old_file = UPLOAD_BASE_DIR . str_replace(UPLOAD_BASE_URL, '', $existing_file);
+        $old_file = UPLOAD_BASE_DIR . ltrim(str_replace(UPLOAD_BASE_URL, '', $existing_file), '/');
         if (file_exists($old_file) && is_file($old_file)) {
             unlink($old_file);
         }
     }
 
-    return UPLOAD_BASE_URL . $folder_name . '/' . $filename;
+    // Return path in the new format: menu/"category"/"filename"
+    return 'menu/' . $folder_name . '/' . $filename;
 }

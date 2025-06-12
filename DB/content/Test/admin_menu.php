@@ -1,6 +1,10 @@
-<?php
+<?php 
 require_once 'db_connect.php';
 session_start();
+
+// Enable error reporting for debugging
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
 // Handle CRUD operations
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -8,44 +12,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Create new item
         if (isset($_POST['create'])) {
             $category = $_POST['category'];
-            $image_url = !empty($_FILES['image']['name']) 
-                ? handleFileUpload($_FILES['image'], $category, '') 
-                : '/Group3_Database_Project/DB/assets/images/menu-default.png';
+			$image_url = !empty($_FILES['image']['name']) 
+				? handleFileUpload($_FILES['image'], $category, '') 
+				: 'menu/images/menu-default.png';  // Changed this line
 
-            $stmt = $pdo->prepare("INSERT INTO menu_items (name, image_url, price, available, category, popularity_score) 
-                                 VALUES (?, ?, ?, ?, ?, ?)");
+            $stmt = $pdo->prepare("INSERT INTO menu_items (name, image_url, price, available, category) 
+                                 VALUES (?, ?, ?, ?, ?)");
             $stmt->execute([
                 $_POST['name'],
                 $image_url,
                 $_POST['price'],
                 isset($_POST['available']) ? 1 : 0,
-                $category,
-                $_POST['popularity_score']
+                $category
             ]);
             $_SESSION['message'] = "Item added successfully!";
         }
 
-		// Update item
-		if (isset($_POST['update'])) {
-			$category = $_POST['category'];
-			$stmt = $pdo->prepare("SELECT image_url, category FROM menu_items WHERE item_id = ?");
-			$stmt->execute([$_POST['item_id']]);
-			$existing = $stmt->fetch(PDO::FETCH_ASSOC);
-			
-			// Handle file upload if new image was provided
-			if (!empty($_FILES['image']['name'])) {
-				$image_url = handleFileUpload($_FILES['image'], $category, $existing['image_url']);
-			} 
-			// Handle category change without new image
+        // Update item
+        if (isset($_POST['update'])) {
+            // First get the existing item data
+            $stmt = $pdo->prepare("SELECT * FROM menu_items WHERE item_id = ?");
+            $stmt->execute([$_POST['item_id']]);
+            $existing = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$existing) {
+                throw new Exception("Item not found in database.");
+            }
+            
+            $category = $_POST['category'];
+            
+            // Handle file upload if new image was provided
+            if (!empty($_FILES['image']['name'])) {
+                $image_url = handleFileUpload($_FILES['image'], $category, $existing['image_url']);
+            } 
+            // Handle category change without new image
 			elseif ($category !== $existing['category']) {
-				$old_path = UPLOAD_BASE_DIR . str_replace(UPLOAD_BASE_URL, '', $existing['image_url']);
+				$old_path = UPLOAD_BASE_DIR . ltrim($existing['image_url'], 'menu/');
 				
 				// Only proceed if the old file exists and isn't the default image
-				if (file_exists($old_path) && $existing['image_url'] != '/Group3_Database_Project/DB/assets/images/menu-default.png') {
+				if (file_exists($old_path) && $existing['image_url'] != 'menu/images/menu-default.png') {
 					// Get the filename from the old path
 					$filename = basename($existing['image_url']);
 					
-					// Create the new directory path based on the new category
+					// Map category to folder name
 					$category_folders = [
 						'Traditional Beverages' => 'traditionalBeverages',
 						'Snacks & Appetizers' => 'snacksNappetizers',
@@ -67,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 					
 					// Move the file
 					if (rename($old_path, $new_path)) {
-						$image_url = UPLOAD_BASE_URL . $folder_name . '/' . $filename;
+						$image_url = 'menu/' . $folder_name . '/' . $filename;
 					} else {
 						// If move fails, keep the old path
 						$image_url = $existing['image_url'];
@@ -77,27 +86,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 					// File doesn't exist or is default image - keep current URL
 					$image_url = $existing['image_url'];
 				}
-			} 
-			// No changes to image or category
-			else {
-				$image_url = $existing['image_url'];
 			}
 
-			$stmt = $pdo->prepare("UPDATE menu_items SET 
-								 name = ?, image_url = ?, price = ?, available = ?, 
-								 category = ?, popularity_score = ? 
-								 WHERE item_id = ?");
-			$stmt->execute([
-				$_POST['name'],
-				$image_url,
-				$_POST['price'],
-				isset($_POST['available']) ? 1 : 0,
-				$category,
-				$_POST['popularity_score'],
-				$_POST['item_id']
-			]);
-			$_SESSION['message'] = "Item updated successfully!";
-		}
+            // Get values from form or use existing values if not provided
+            $name = !empty($_POST['name']) ? $_POST['name'] : $existing['name'];
+            $price = !empty($_POST['price']) ? $_POST['price'] : $existing['price'];
+            $available = isset($_POST['available']) ? 1 : 0;
+            $popularity_score = $existing['popularity_score']; // Keep existing score unless you want to change it
+
+            // Update the item
+            $stmt = $pdo->prepare("UPDATE menu_items SET 
+                                  name = ?, 
+                                  image_url = ?, 
+                                  price = ?, 
+                                  available = ?, 
+                                  category = ?,
+                                  popularity_score = ?
+                                  WHERE item_id = ?");
+            
+            $stmt->execute([
+                $name,
+                $image_url,
+                $price,
+                $available,
+                $category,
+                $popularity_score,
+                $_POST['item_id']
+            ]);
+            
+            if ($stmt->rowCount() > 0) {
+                $_SESSION['message'] = "Item updated successfully!";
+            } else {
+                $_SESSION['error'] = "No changes were made to the item.";
+            }
+        }
         
         // Delete item
         if (isset($_POST['delete'])) {
@@ -110,18 +132,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $pdo->prepare("DELETE FROM menu_items WHERE item_id = ?");
             $stmt->execute([$_POST['item_id']]);
 
-            // Delete the image file if it's not the default
-            if ($image_url && strpos($image_url, 'menu-default.png') === false) {
-                $file_path = UPLOAD_DIR . basename($image_url);
-                if (file_exists($file_path)) {
-                    unlink($file_path);
-                }
-            }
+			// Delete the image file if it's not the default
+			if ($image_url && strpos($image_url, 'menu-default.png') === false) {
+				$file_path = UPLOAD_BASE_DIR . ltrim($image_url, 'menu/');
+				if (file_exists($file_path)) {
+					unlink($file_path);
+				}
+			}
 
             $_SESSION['message'] = "Item deleted successfully!";
         }
     } catch (Exception $e) {
-        $_SESSION['error'] = $e->getMessage();
+        $_SESSION['error'] = "Error: " . $e->getMessage();
+        error_log("Database error: " . $e->getMessage());
     }
     
     header("Location: admin_menu.php");
@@ -220,10 +243,10 @@ $categories = [
         <!-- Add New Item Form -->
         <div class="form-section">
             <h2 class="mb-4"><i class="fas fa-plus-circle"></i> Add New Menu Item</h2>
-            <form method="POST" action="admin_menu.php" enctype="multipart/form-data">
+            <form method="POST" action="admin_menu.php" enctype="multipart/form-data" id="addForm">
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <label for="name" class="form-label">Item Name</label>
+                        <label for="name" class="form-label">Item Name *</label>
                         <input type="text" class="form-control" id="name" name="name" required>
                     </div>
                     
@@ -240,7 +263,7 @@ $categories = [
                     </div>
                     
                     <div class="col-md-3">
-                        <label for="price" class="form-label">Price (RM)</label>
+                        <label for="price" class="form-label">Price (RM) *</label>
                         <input type="number" class="form-control" id="price" name="price" step="0.01" min="0" required>
                     </div>
                     
@@ -253,18 +276,13 @@ $categories = [
                     </div>
                     
                     <div class="col-md-3">
-                        <label for="category" class="form-label">Category</label>
+                        <label for="category" class="form-label">Category *</label>
                         <select class="form-select" id="category" name="category" required>
                             <option value="">Select a category</option>
                             <?php foreach ($categories as $cat): ?>
                                 <option value="<?= $cat ?>"><?= $cat ?></option>
                             <?php endforeach; ?>
                         </select>
-                    </div>
-                    
-                    <div class="col-md-3">
-                        <label for="popularity_score" class="form-label">Popularity Score</label>
-                        <input type="number" class="form-control" id="popularity_score" name="popularity_score" min="0" required>
                     </div>
                     
                     <div class="col-12">
@@ -276,65 +294,65 @@ $categories = [
             </form>
         </div>
         
-        <!-- Menu Items Table -->
+<!-- Menu Items Table -->
         <h2 class="mb-4"><i class="fas fa-utensils"></i> Current Menu Items</h2>
         <div class="table-responsive">
             <table class="table table-striped table-hover table-bordered">
                 <thead class="table-dark">
                     <tr>
-                        <th class="sortable <?= $sort === 'item_id' ? $order : '' ?>" 
+                        <th class="sortable <?= $sort === 'item_id' ? $order : '' ?>"
                             onclick="sortTable('item_id')">ID</th>
-                        <th class="sortable <?= $sort === 'name' ? $order : '' ?>" 
+                        <th class="sortable <?= $sort === 'name' ? $order : '' ?>"
                             onclick="sortTable('name')">Name</th>
                         <th>Image</th>
-                        <th class="sortable <?= $sort === 'price' ? $order : '' ?>" 
+                        <th class="sortable <?= $sort === 'price' ? $order : '' ?>"
                             onclick="sortTable('price')">Price</th>
-                        <th class="sortable <?= $sort === 'available' ? $order : '' ?>" 
+                        <th class="sortable <?= $sort === 'available' ? $order : '' ?>"
                             onclick="sortTable('available')">Available</th>
-                        <th class="sortable <?= $sort === 'category' ? $order : '' ?>" 
+                        <th class="sortable <?= $sort === 'category' ? $order : '' ?>"
                             onclick="sortTable('category')">Category</th>
-                        <th class="sortable <?= $sort === 'popularity_score' ? $order : '' ?>" 
+                        <th class="sortable <?= $sort === 'popularity_score' ? $order : '' ?>"
                             onclick="sortTable('popularity_score')">Popularity</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($menu_items as $item): 
-                        $imagePath = !empty($item['image_url'])
-                            ? $item['image_url']
-                            : '/Group3_Database_Project/DB/assets/images/menu-default.png';
-                    ?>
-                    <tr>
-                        <td><?= $item['item_id'] ?></td>
-                        <td><?= htmlspecialchars($item['name']) ?></td>
-                        <td>
-                            <img src="<?= $imagePath ?>" 
-                                 alt="<?= htmlspecialchars($item['name']) ?>" 
-                                 class="img-thumbnail"
-                                 onerror="this.src='/Group3_Database_Project/DB/assets/images/menu-default.png'">
-                        </td>
-                        <td>RM <?= number_format($item['price'], 2) ?></td>
-                        <td>
-                            <span class="badge rounded-pill <?= $item['available'] ? 'badge-available' : 'badge-unavailable' ?>">
-                                <?= $item['available'] ? 'Yes' : 'No' ?>
-                            </span>
-                        </td>
-                        <td><?= htmlspecialchars($item['category']) ?></td>
-                        <td><?= $item['popularity_score'] ?></td>
-                        <td class="action-buttons">
-                            <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editModal" 
+					<?php foreach ($menu_items as $item):
+						// Change this line to handle the new path format
+						$imagePath = !empty($item['image_url'])
+							? '/Group3_Database_Project/DB/assets/' . $item['image_url']
+							: '/Group3_Database_Project/DB/assets/images/menu-default.png';
+					?>
+                        <tr>
+                            <td><?= $item['item_id'] ?></td>
+                            <td><?= htmlspecialchars($item['name']) ?></td>
+                            <td>
+                                <img src="<?= $imagePath ?>"
+                                    alt="<?= htmlspecialchars($item['name']) ?>"
+                                    class="img-thumbnail"
+                                    onerror="this.src='/Group3_Database_Project/DB/assets/images/menu-default.png'">
+                            </td>
+                            <td>RM <?= number_format($item['price'], 2) ?></td>
+                            <td>
+                                <span class="badge rounded-pill <?= $item['available'] ? 'badge-available' : 'badge-unavailable' ?>">
+                                    <?= $item['available'] ? 'Yes' : 'No' ?>
+                                </span>
+                            </td>
+                            <td><?= htmlspecialchars($item['category']) ?></td>
+                            <td><?= $item['popularity_score'] ?></td>
+                            <td class="action-buttons">
+                                <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editModal"
                                     onclick="loadEditForm(<?= $item['item_id'] ?>, '<?= $imagePath ?>')">
-                                <i class="fas fa-edit"></i> Edit
-                            </button>
-                            <form method="POST" action="admin_menu.php" style="display: inline;">
-                                <input type="hidden" name="item_id" value="<?= $item['item_id'] ?>">
-                                <button type="submit" name="delete" class="btn btn-sm btn-danger" 
-                                        onclick="return confirm('Are you sure you want to delete this item?')">
-                                    <i class="fas fa-trash-alt"></i> Delete
+                                    <i class="fas fa-edit"></i> Edit
                                 </button>
-                            </form>
-                        </td>
-                    </tr>
+                                <form method="POST" action="admin_menu.php" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this item?')">
+                                    <input type="hidden" name="item_id" value="<?= $item['item_id'] ?>">
+                                    <button type="submit" name="delete" class="btn btn-sm btn-danger">
+                                        <i class="fas fa-trash-alt"></i> Delete
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
                     <?php endforeach; ?>
                 </tbody>
             </table>
@@ -355,7 +373,7 @@ $categories = [
                         
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label for="edit_name" class="form-label">Item Name</label>
+                                <label for="edit_name" class="form-label">Item Name *</label>
                                 <input type="text" class="form-control" id="edit_name" name="name" required>
                             </div>
                             
@@ -372,7 +390,7 @@ $categories = [
                             </div>
                             
                             <div class="col-md-3">
-                                <label for="edit_price" class="form-label">Price (RM)</label>
+                                <label for="edit_price" class="form-label">Price (RM) *</label>
                                 <input type="number" class="form-control" id="edit_price" name="price" step="0.01" min="0" required>
                             </div>
                             
@@ -385,18 +403,13 @@ $categories = [
                             </div>
                             
                             <div class="col-md-3">
-                                <label for="edit_category" class="form-label">Category</label>
+                                <label for="edit_category" class="form-label">Category *</label>
                                 <select class="form-select" id="edit_category" name="category" required>
                                     <option value="">Select a category</option>
                                     <?php foreach ($categories as $cat): ?>
                                         <option value="<?= $cat ?>"><?= $cat ?></option>
                                     <?php endforeach; ?>
                                 </select>
-                            </div>
-                            
-                            <div class="col-md-3">
-                                <label for="edit_popularity_score" class="form-label">Popularity Score</label>
-                                <input type="number" class="form-control" id="edit_popularity_score" name="popularity_score" min="0" required>
                             </div>
                         </div>
                     </div>
@@ -416,15 +429,23 @@ $categories = [
         // Function to load data into edit form
         function loadEditForm(itemId, currentImagePath) {
             fetch('get_item.php?id=' + itemId)
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
                 .then(item => {
+                    if (!item) {
+                        throw new Error('Item data is empty');
+                    }
+                    
                     // Populate form fields
                     document.getElementById('edit_item_id').value = item.item_id;
                     document.getElementById('edit_name').value = item.name;
                     document.getElementById('edit_price').value = item.price;
                     document.getElementById('edit_available').checked = item.available == 1;
                     document.getElementById('edit_category').value = item.category;
-                    document.getElementById('edit_popularity_score').value = item.popularity_score;
                     document.getElementById('edit_current_image').value = item.image_url;
                     
                     // Show current image preview
@@ -434,11 +455,15 @@ $categories = [
                         preview.style.display = 'block';
                         document.getElementById('edit-file-upload-label').textContent = 'Change image...';
                     } else {
-                        preview.style.display = 'none';
+                        preview.src = '/Group3_Database_Project/DB/assets/images/menu-default.png';
+                        preview.style.display = 'block';
                         document.getElementById('edit-file-upload-label').textContent = 'Choose file...';
                     }
                 })
-                .catch(error => console.error('Error:', error));
+                .catch(error => {
+                    console.error('Error loading edit form:', error);
+                    alert('Error loading item data. Please try again.');
+                });
         }
 
         // File upload handling for add form
@@ -494,6 +519,27 @@ $categories = [
             url.searchParams.set('order', newOrder);
             window.location.href = url.toString();
         }
+
+        // Form validation
+        document.getElementById('editForm').addEventListener('submit', function(e) {
+            const name = document.getElementById('edit_name').value.trim();
+            const price = document.getElementById('edit_price').value.trim();
+            const category = document.getElementById('edit_category').value;
+            
+            if (!name || !price || !category) {
+                e.preventDefault();
+                alert('Please fill in all required fields (marked with *)');
+                return false;
+            }
+            
+            if (isNaN(price) || parseFloat(price) <= 0) {
+                e.preventDefault();
+                alert('Please enter a valid price (greater than 0)');
+                return false;
+            }
+            
+            return true;
+        });
 
         // Initialize sort indicators
         document.addEventListener('DOMContentLoaded', function() {
