@@ -24,7 +24,7 @@ if ($conn->connect_error) {
     } else {
         while ($row = $resultCheck->fetch_assoc()) {
             if ($row["UserPwd"] == $user_Pwd) {
-                $_SESSION["UserID"] = $user_ID;
+                $_SESSION["UserID"] = $user_ID; //try ni
                 $_SESSION["UserType"] = $row["UserType"];
                 header("Location: index.php");
                 exit();
