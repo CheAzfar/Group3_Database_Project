@@ -166,7 +166,7 @@ $itemStmt->close();
 
                             <div class="d-grid gap-2 col-md-6 mx-auto">
                                 <a href="index.php" class="btn btn-warning">Back to Home</a>
-                                <a href="menu.php" class="btn btn-outline-warning">Order More Items</a>
+                                <a href="index.php#foodMenuAccordion" class="btn btn-outline-warning">Order More Items</a>
                                 <button onclick="window.print()" class="btn btn-outline-secondary">
                                     <i class="fas fa-print"></i> Print Receipt
                                 </button>

@@ -44,11 +44,11 @@ function getPopularDishes($conn)
                     <div class="text-content mb-4 mb-md-0">
                         <h1 class="display-3 fw-bold mb-3">PUAN ZAI HIGHWAY</h1>
                         <p class="lead mb-4">Raso Pahang, Ori Tok Tambah!</p>
-                        <button class="btn btn-order btn-lg" onclick="window.location.href='/Group3_Database_Project/DB/index.php#foodMenuAccordion'">ORDER NOW</button>
+                        <button class="btn btn-order btn-lg" onclick="window.location.href='/Group3_Database_Project/DB/content/pages/index.php#foodMenuAccordion'">ORDER NOW</button>
                     </div>
                     <!-- Image Content -->
                     <div class="hero-image ms-md-5">
-                        <img src="/Group3_Database_Project/DB/assets/images/menu-default.png" class="img-fluid" alt="Menu Image" style="max-width: 400px;">
+                        <img src="/Group3_Database_Project/DB/assets/images/default.png" class="img-fluid" alt="Menu Image" style="max-width: 400px;">
                     </div>
                 </div>
             </div>
