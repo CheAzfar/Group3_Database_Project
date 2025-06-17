@@ -15,9 +15,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Create new item
         if (isset($_POST['create'])) {
             $category = $_POST['category'];
-			$image_url = !empty($_FILES['image']['name']) 
-				? handleFileUpload($_FILES['image'], $category, '') 
-				: 'menu/images/menu-default.png';  // Changed this line
+            $image_url = !empty($_FILES['image']['name']) 
+                ? handleFileUpload($_FILES['image'], $category, '') 
+                : 'menu/images/menu-default.png';  // Changed this line
 
             $stmt = $pdo->prepare("INSERT INTO menu_items (name, image_url, price, available, category) 
                                  VALUES (?, ?, ?, ?, ?)");
@@ -49,47 +49,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $image_url = handleFileUpload($_FILES['image'], $category, $existing['image_url']);
             } 
             // Handle category change without new image
-			elseif ($category !== $existing['category']) {
-				$old_path = UPLOAD_BASE_DIR . ltrim($existing['image_url'], 'menu/');
-				
-				// Only proceed if the old file exists and isn't the default image
-				if (file_exists($old_path) && $existing['image_url'] != 'menu/images/menu-default.png') {
-					// Get the filename from the old path
-					$filename = basename($existing['image_url']);
-					
-					// Map category to folder name
-					$category_folders = [
-						'Traditional Beverages' => 'traditionalBeverages',
-						'Snacks & Appetizers' => 'snacksNappetizers',
-						'Rice & Noodles' => 'riceNnoodles',
-						'Proteins & Sides' => 'proteinsNsides',
-						'Fresh & Cold' => 'freshNcold',
-						'Desserts' => 'desserts'
-					];
-					$folder_name = $category_folders[$category] ?? strtolower(str_replace(' ', '', $category));
-					$new_dir = UPLOAD_BASE_DIR . $folder_name . '/';
-					
-					// Create new directory if it doesn't exist
-					if (!file_exists($new_dir)) {
-						mkdir($new_dir, 0755, true);
-					}
-					
-					// New full path
-					$new_path = $new_dir . $filename;
-					
-					// Move the file
-					if (rename($old_path, $new_path)) {
-						$image_url = 'menu/' . $folder_name . '/' . $filename;
-					} else {
-						// If move fails, keep the old path
-						$image_url = $existing['image_url'];
-						$_SESSION['error'] = "Could not move file to new category directory, but other changes were saved.";
-					}
-				} else {
-					// File doesn't exist or is default image - keep current URL
-					$image_url = $existing['image_url'];
-				}
-			}
+            elseif ($category !== $existing['category']) {
+                $old_path = UPLOAD_BASE_DIR . ltrim($existing['image_url'], 'menu/');
+                
+                // Only proceed if the old file exists and isn't the default image
+                if (file_exists($old_path) && $existing['image_url'] != 'menu/images/menu-default.png') {
+                    // Get the filename from the old path
+                    $filename = basename($existing['image_url']);
+                    
+                    // Map category to folder name
+                    $category_folders = [
+                        'Traditional Beverages' => 'traditionalBeverages',
+                        'Snacks & Appetizers' => 'snacksNappetizers',
+                        'Rice & Noodles' => 'riceNnoodles',
+                        'Proteins & Sides' => 'proteinsNsides',
+                        'Fresh & Cold' => 'freshNcold',
+                        'Desserts' => 'desserts'
+                    ];
+                    $folder_name = $category_folders[$category] ?? strtolower(str_replace(' ', '', $category));
+                    $new_dir = UPLOAD_BASE_DIR . $folder_name . '/';
+                    
+                    // Create new directory if it doesn't exist
+                    if (!file_exists($new_dir)) {
+                        mkdir($new_dir, 0755, true);
+                    }
+                    
+                    // New full path
+                    $new_path = $new_dir . $filename;
+                    
+                    // Move the file
+                    if (rename($old_path, $new_path)) {
+                        $image_url = 'menu/' . $folder_name . '/' . $filename;
+                    } else {
+                        // If move fails, keep the old path
+                        $image_url = $existing['image_url'];
+                        $_SESSION['error'] = "Could not move file to new category directory, but other changes were saved.";
+                    }
+                } else {
+                    // File doesn't exist or is default image - keep current URL
+                    $image_url = $existing['image_url'];
+                }
+            }
 
             // Get values from form or use existing values if not provided
             $name = !empty($_POST['name']) ? $_POST['name'] : $existing['name'];
@@ -135,13 +135,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $pdo->prepare("DELETE FROM menu_items WHERE item_id = ?");
             $stmt->execute([$_POST['item_id']]);
 
-			// Delete the image file if it's not the default
-			if ($image_url && strpos($image_url, 'menu-default.png') === false) {
-				$file_path = UPLOAD_BASE_DIR . ltrim($image_url, 'menu/');
-				if (file_exists($file_path)) {
-					unlink($file_path);
-				}
-			}
+            // Delete the image file if it's not the default
+            if ($image_url && strpos($image_url, 'menu-default.png') === false) {
+                $file_path = UPLOAD_BASE_DIR . ltrim($image_url, 'menu/');
+                if (file_exists($file_path)) {
+                    unlink($file_path);
+                }
+            }
 
             $_SESSION['message'] = "Item deleted successfully!";
         }
@@ -201,12 +201,28 @@ $categories = [
         .badge-available { background-color: #28a745; }
         .badge-unavailable { background-color: #dc3545; }
         .action-buttons .btn { margin-right: 5px; margin-bottom: 5px; }
-        .sortable { cursor: pointer; position: relative; }
-        .sortable:hover { background-color: #f1f1f1; }
+        
+        /* Updated sorting styles */
+        .sortable { 
+            cursor: pointer; 
+            position: relative;
+            padding-right: 20px;
+            transition: background-color 0.3s ease;
+        }
+        .sortable:hover { 
+            background-color:rgb(171, 121, 36);
+        }
+        .sortable.active {
+            background-color:rgb(166, 108, 32);
+            font-weight: bold;
+        }
         .sortable::after {
             content: '';
             display: inline-block;
-            margin-left: 5px;
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
             width: 0;
             height: 0;
             border-left: 5px solid transparent;
@@ -218,6 +234,17 @@ $categories = [
         .sortable.desc::after {
             border-top: 5px solid #000;
         }
+        
+        /* Improved table row hover */
+        .table-hover tbody tr:hover {
+            background-color: rgba(0, 123, 255, 0.1);
+        }
+        
+        /* Highlight sorted column */
+        .table th.sortable.active {
+            background-color:rgb(156, 104, 31);
+        }
+        
         .file-upload { position: relative; overflow: hidden; display: inline-block; }
         .file-upload-input { position: absolute; left: 0; top: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
     </style>
@@ -300,35 +327,35 @@ $categories = [
             </form>
         </div>
         
-<!-- Menu Items Table -->
+        <!-- Menu Items Table -->
         <h2 class="mb-4"><i class="fas fa-utensils"></i> Current Menu Items</h2>
         <div class="table-responsive">
             <table class="table table-striped table-hover table-bordered">
                 <thead class="table-dark">
                     <tr>
-                        <th class="sortable <?= $sort === 'item_id' ? $order : '' ?>"
+                        <th class="sortable <?= $sort === 'item_id' ? $order : '' ?> <?= $sort === 'item_id' ? 'active' : '' ?>"
                             onclick="sortTable('item_id')">ID</th>
-                        <th class="sortable <?= $sort === 'name' ? $order : '' ?>"
+                        <th class="sortable <?= $sort === 'name' ? $order : '' ?> <?= $sort === 'name' ? 'active' : '' ?>"
                             onclick="sortTable('name')">Name</th>
                         <th>Image</th>
-                        <th class="sortable <?= $sort === 'price' ? $order : '' ?>"
+                        <th class="sortable <?= $sort === 'price' ? $order : '' ?> <?= $sort === 'price' ? 'active' : '' ?>"
                             onclick="sortTable('price')">Price</th>
-                        <th class="sortable <?= $sort === 'available' ? $order : '' ?>"
+                        <th class="sortable <?= $sort === 'available' ? $order : '' ?> <?= $sort === 'available' ? 'active' : '' ?>"
                             onclick="sortTable('available')">Available</th>
-                        <th class="sortable <?= $sort === 'category' ? $order : '' ?>"
+                        <th class="sortable <?= $sort === 'category' ? $order : '' ?> <?= $sort === 'category' ? 'active' : '' ?>"
                             onclick="sortTable('category')">Category</th>
-                        <th class="sortable <?= $sort === 'popularity_score' ? $order : '' ?>"
+                        <th class="sortable <?= $sort === 'popularity_score' ? $order : '' ?> <?= $sort === 'popularity_score' ? 'active' : '' ?>"
                             onclick="sortTable('popularity_score')">Popularity</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-					<?php foreach ($menu_items as $item):
-						// Change this line to handle the new path format
-						$imagePath = !empty($item['image_url'])
-							? '/Group3_Database_Project/DB/assets/' . $item['image_url']
-							: '/Group3_Database_Project/DB/assets/images/menu-default.png';
-					?>
+                    <?php foreach ($menu_items as $item):
+                        // Change this line to handle the new path format
+                        $imagePath = !empty($item['image_url'])
+                            ? '/Group3_Database_Project/DB/assets/' . $item['image_url']
+                            : '/Group3_Database_Project/DB/assets/images/menu-default.png';
+                    ?>
                         <tr>
                             <td><?= $item['item_id'] ?></td>
                             <td><?= htmlspecialchars($item['name']) ?></td>
