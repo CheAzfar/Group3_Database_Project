@@ -42,6 +42,15 @@ while ($row = $result->fetch_assoc()) {
     $orders[] = $row;
     $totalIncome += $row['TotalAmount'];
 }
+
+// Prepare data for chart (line chart)
+$incomeData = [];
+foreach ($orders as $order) {
+    $incomeData[] = [
+        'date' => $order['OrderDate'],
+        'totalAmount' => $order['TotalAmount']
+    ];
+}
 ?>
 
 <!DOCTYPE html>
@@ -52,6 +61,8 @@ while ($row = $result->fetch_assoc()) {
     <link rel="stylesheet" href="http://localhost/Group3_Database_Project/DB/content/css/style.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <style>
         .income-table th {
             background-color: #F4A261 !important;
@@ -68,6 +79,12 @@ while ($row = $result->fetch_assoc()) {
             background-color: #d65b3f;
             color: white;
         }
+        #incomeChart {
+            max-width: 100%;  /* Allows chart to be responsive */
+            max-height: 200px;  /* Set maximum height for the chart */
+            width: 100%;  /* Ensures the chart stretches to fill its container */
+        }
+
         @media print {
             body * {
                 visibility: hidden;
@@ -93,8 +110,13 @@ while ($row = $result->fetch_assoc()) {
 <body class="d-flex flex-column min-vh-100">
 
 <main class="container py-5 flex-fill">
+    <div class="container py-5">
+            <h3 class="text-center">Income Report Graph</h3>
+            <canvas id="incomeChart" width="400" height="200"></canvas>
+        </div>
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="text-center">Income Report</h2>
+        
         <div class="text-end mb-3">
             <button type="button" class="btn btn-custom" onclick="window.print()">
                 <i class="fa fa-print"></i> Print
@@ -169,5 +191,38 @@ while ($row = $result->fetch_assoc()) {
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    const ctx = document.getElementById('incomeChart').getContext('2d');
+    
+    // Assuming you already have your income data as arrays for each month (example)
+    const incomeData = <?php echo json_encode($incomeData); ?>; // Example array from PHP
+    const labels = incomeData.map(item => item.date); // Assuming your data has a date field
+    const incomes = incomeData.map(item => item.totalAmount); // Assuming your data has an amount field
+
+    // Create the line chart
+    const incomeChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Income (RM)',
+                data: incomes,
+                backgroundColor: '#F4A261', // Line color
+                borderColor: '#F4A261',
+                fill: false, // No fill beneath the line
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+</script>
+
 </body>
 </html>

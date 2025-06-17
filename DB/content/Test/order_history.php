@@ -63,6 +63,10 @@ $result = $conn->query($query);
             background-color: #ffc107;
             color: black;
         }
+        .badge.pending {
+            background-color:#5cc6f6;
+            color: black;
+        }
         .badge.cancelled {
             background-color: #dc3545;
         }
@@ -114,6 +118,7 @@ $result = $conn->query($query);
                 <option value="">All Statuses</option>
                 <option value="completed" <?= $statusFilter === 'completed' ? 'selected' : '' ?>>Completed</option>
                 <option value="processing" <?= $statusFilter === 'processing' ? 'selected' : '' ?>>Processing</option>
+                <option value="pending" <?= $statusFilter === 'pending' ? 'selected' : '' ?>>Pending</option>
                 <option value="cancelled" <?= $statusFilter === 'cancelled' ? 'selected' : '' ?>>Cancelled</option>
             </select>
         </div>
