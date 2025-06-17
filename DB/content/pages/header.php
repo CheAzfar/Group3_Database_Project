@@ -4,6 +4,10 @@ if (session_status() == PHP_SESSION_NONE) {
 }
 $isAdmin = isset($_SESSION['UserType']) && $_SESSION['UserType'] === 'admin';
 
+// Define pages where search should be hidden
+$hideSearchPages = ['admin_menu.php', 'order_management.php', 'order_history.php'];
+$currentPage = basename($_SERVER['PHP_SELF']);
+$hideSearch = in_array($currentPage, $hideSearchPages);
 ?>
 
 <header>
@@ -20,12 +24,6 @@ $isAdmin = isset($_SESSION['UserType']) && $_SESSION['UserType'] === 'admin';
             <!-- Collapsible Content -->
             <div class="collapse navbar-collapse" id="navbarContent">
                 <div class="d-flex flex-column flex-lg-row align-items-start align-items-lg-center nav-spacing ms-lg-auto">
-                    <a href="index.php" class="me-lg-3 mb-2 mb-lg-0"><i class="fa-solid fa-house me-1"></i> Home</a>
-                    <a href="cart.php" class="me-lg-3 mb-2 mb-lg-0"><i class="fa-solid fa-cart-shopping me-1"></i> Cart</a>
-                    <a href="index.php#servicesSection" class="me-lg-3 mb-2 mb-lg-0"><i class="fa-solid fa-bell-concierge me-1"></i> Service</a>
-                    <a href="index.php#foodMenuAccordion" class="me-lg-3 mb-2 mb-lg-0"><i class="fa-solid fa-book-open me-1"></i> Menu</a>
-                    <a href="about.php" class="me-lg-3 mb-2 mb-lg-0"><i class="fa-solid fa-circle-info me-1"></i> About Us</a>
-
                     <?php if ($isAdmin): ?>
                     <!-- Admin Dropdown -->
                     <div class="dropdown me-lg-3 mb-2 mb-lg-0">
@@ -37,31 +35,43 @@ $isAdmin = isset($_SESSION['UserType']) && $_SESSION['UserType'] === 'admin';
                                 <a class="dropdown-item d-flex align-items-center gap-2" href="/Group3_Database_Project/DB/content/Test/admin_menu.php">
                                     <i class="fa-solid fa-gear menu-icon"></i> Admin Menu
                                 </a>
-                                </li>
-                                <li>
+                            </li>
+                            <li>
                                 <a class="dropdown-item d-flex align-items-center gap-2" href="/Group3_Database_Project/DB/content/pages/order_management.php">
                                     <i class="fa-solid fa-box-open menu-icon"></i> Order Management
                                 </a>
-                                </li>
-                                <li>
+                            </li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="/Group3_Database_Project/DB/content/Test/order_history.php">
+                                    <i class="fa-solid fa-clock-rotate-left menu-icon"></i> Order History
+                                </a>
+                            </li>
+                            <li>
                                 <a class="dropdown-item d-flex align-items-center gap-2" href="/Group3_Database_Project/DB/content/pages/logout.php">
                                     <i class="fa-solid fa-right-from-bracket menu-icon"></i> Log Out
                                 </a>
                             </li>
                         </ul>
                     </div>
-                    <!-- Logout button for Admin -->
-                    
                     <?php endif; ?>
+                    <a href="/Group3_Database_Project/DB/content/pages/index.php" class="me-lg-3 mb-2 mb-lg-0"><i class="fa-solid fa-house me-1"></i> Home</a>
+                    <a href="/Group3_Database_Project/DB/content/pages/cart.php" class="me-lg-3 mb-2 mb-lg-0"><i class="fa-solid fa-cart-shopping me-1"></i> Cart</a>
+                    <a href="/Group3_Database_Project/DB/content/pages/index.php#servicesSection" class="me-lg-3 mb-2 mb-lg-0"><i class="fa-solid fa-bell-concierge me-1"></i> Service</a>
+                    <a href="/Group3_Database_Project/DB/content/pages/index.php#foodMenuAccordion" class="me-lg-3 mb-2 mb-lg-0"><i class="fa-solid fa-book-open me-1"></i> Menu</a>
+                    <a href="/Group3_Database_Project/DB/content/pages/about.php" class="me-lg-3 mb-2 mb-lg-0"><i class="fa-solid fa-circle-info me-1"></i> About Us</a>
+
+                    
                 </div>
 
-                <!-- Search form (mobile: stacks below links) -->
+                <!-- Search form (visible only on non-admin pages) -->
+                <?php if (!$hideSearch): ?>
                 <form class="d-flex mt-3 mt-lg-0 ms-lg-3" role="search">
                     <div class="input-group">
                         <input class="form-control" type="search" placeholder="Search">
                         <button class="btn btn-outline-dark" type="submit">Search</button>
                     </div>
                 </form>
+                <?php endif; ?>
             </div>
         </div>
     </nav>
