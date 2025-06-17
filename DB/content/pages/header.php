@@ -5,7 +5,7 @@ if (session_status() == PHP_SESSION_NONE) {
 $isAdmin = isset($_SESSION['UserType']) && $_SESSION['UserType'] === 'admin';
 
 // Define pages where search should be hidden
-$hideSearchPages = ['admin_menu.php', 'order_management.php', 'order_history.php'];
+$hideSearchPages = ['admin_menu.php', 'order_management.php', 'order_history.php','income_report.php'];
 $currentPage = basename($_SERVER['PHP_SELF']);
 $hideSearch = in_array($currentPage, $hideSearchPages);
 ?>
@@ -44,6 +44,11 @@ $hideSearch = in_array($currentPage, $hideSearchPages);
                             <li>
                                 <a class="dropdown-item d-flex align-items-center gap-2" href="/Group3_Database_Project/DB/content/Test/order_history.php">
                                     <i class="fa-solid fa-clock-rotate-left menu-icon"></i> Order History
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="/Group3_Database_Project/DB/content/Test/income_report.php">
+                                    <i class="fa-solid fa-chart-line menu-icon"></i> Income Report
                                 </a>
                             </li>
                             <li>

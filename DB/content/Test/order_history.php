@@ -66,6 +66,16 @@ $result = $conn->query($query);
         .badge.cancelled {
             background-color: #dc3545;
         }
+        .btn-custom {
+            background-color: #F4A261;
+            color: white;
+            border: none;
+        }
+
+        .btn-custom:hover {
+            background-color: #d65b3f;
+            color: white;
+        }
         @media print {
             body * {
                 visibility: hidden;
@@ -89,7 +99,7 @@ $result = $conn->query($query);
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="text-center">Order History</h2>
         <div class="text-end mb-3">
-            <button class="btn btn-outline-primary" onclick="window.print()">
+            <button class="btn btn-custom" onclick="window.print()">
                 <i class="fas fa-print"></i> Print
             </button>
         </div>
@@ -117,7 +127,7 @@ $result = $conn->query($query);
         <div class="col-md-2">
             <input type="date" name="date" class="form-control" value="<?= htmlspecialchars($dateFilter) ?>">
         </div>
-        <div class="col-md-3">
+        <div class="col-md-2">
             <button type="submit" class="btn btn-warning w-100">Filter</button>
         </div>
     </form>

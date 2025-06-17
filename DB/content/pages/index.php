@@ -73,7 +73,15 @@ function getPopularDishes($conn)
                                     <h5 class="card-title"><?= htmlspecialchars($dish['name']); ?></h5>
                                     <p class="card-text">RM <?= htmlspecialchars($dish['price']); ?></p>
                                     <div class="d-flex gap-5 justify-content-around">
-                                        <a href="#" class="btn btn-primary btn-buy">Buy Now</a>
+                                        <!-- ✅ Buy Now Form -->
+                                        <form method="POST" action="/Group3_Database_Project/DB/content/pages/buy_now_handler.php">
+                                            <input type="hidden" name="item_id" value="<?= $dish['item_id'] ?>">
+                                            <input type="hidden" name="name" value="<?= htmlspecialchars($dish['name']) ?>">
+                                            <input type="hidden" name="price" value="<?= $dish['price'] ?>">
+                                            <input type="hidden" name="image_url" value="<?= $dish['image_url'] ?>">
+                                            <button type="submit" class="btn btn-primary btn-buy">Buy Now</button>
+                                        </form>
+
                                         <!-- ✅ Add to Cart Form -->
                                         <form method="POST" action="/Group3_Database_Project/DB/content/pages/add_to_cart.php">
                                             <input type="hidden" name="item_id" value="<?= $dish['item_id'] ?>">
@@ -245,7 +253,7 @@ function getPopularDishes($conn)
                         </div>
                     </div>
                 </div>
-            </div>
+            </div>x
         </section>
     </main>
     <?php include($_SERVER['DOCUMENT_ROOT'] . "/Group3_Database_Project/DB/content/pages/footer.php"); ?>
