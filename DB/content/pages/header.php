@@ -1,3 +1,11 @@
+<?php
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
+$isAdmin = isset($_SESSION['UserType']) && $_SESSION['UserType'] === 'admin';
+
+?>
+
 <header>
     <nav class="navbar navbar-expand-lg custom-navbar">
         <div class="container-fluid">
@@ -17,7 +25,34 @@
                     <a href="index.php#servicesSection" class="me-lg-3 mb-2 mb-lg-0"><i class="fa-solid fa-bell-concierge me-1"></i> Service</a>
                     <a href="index.php#foodMenuAccordion" class="me-lg-3 mb-2 mb-lg-0"><i class="fa-solid fa-book-open me-1"></i> Menu</a>
                     <a href="about.php" class="me-lg-3 mb-2 mb-lg-0"><i class="fa-solid fa-circle-info me-1"></i> About Us</a>
-                    <a href="/Group3_Database_Project/DB/content/pages/logout.php" class="me-lg-3 mb-2 mb-lg-0"><i class="fa-solid fa-right-from-bracket me-1"></i> Log Out</a>
+
+                    <?php if ($isAdmin): ?>
+                    <!-- Admin Dropdown -->
+                    <div class="dropdown me-lg-3 mb-2 mb-lg-0">
+                        <a class="dropdown-toggle text-decoration-none" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fa-solid fa-user-gear me-1"></i> Admin
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="/Group3_Database_Project/DB/content/Test/admin_menu.php">
+                                    <i class="fa-solid fa-gear menu-icon"></i> Admin Menu
+                                </a>
+                                </li>
+                                <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="/Group3_Database_Project/DB/content/pages/order_management.php">
+                                    <i class="fa-solid fa-box-open menu-icon"></i> Order Management
+                                </a>
+                                </li>
+                                <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="/Group3_Database_Project/DB/content/pages/logout.php">
+                                    <i class="fa-solid fa-right-from-bracket menu-icon"></i> Log Out
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    <!-- Logout button for Admin -->
+                    
+                    <?php endif; ?>
                 </div>
 
                 <!-- Search form (mobile: stacks below links) -->

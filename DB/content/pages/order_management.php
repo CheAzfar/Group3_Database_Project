@@ -1,7 +1,10 @@
 <?php
 session_start();
 include($_SERVER['DOCUMENT_ROOT'] . "/Group3_Database_Project/DB/content/pages/connection.php");
-
+if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+    header("Location: index.php");
+    exit();
+}
 // Authentication check
 if (!isset($_SESSION['UserID']) || $_SESSION['UserID'] !== 'Admin') {
     header("Location: login.php");
@@ -100,7 +103,9 @@ function getStatusColor($status)
 </head>
 
 <body class="d-flex flex-column min-vh-100">
-
+    <?php
+        include($_SERVER['DOCUMENT_ROOT'] . "/Group3_Database_Project/DB/content/pages/header.php");
+    ?>
 
     <main class="flex-fill">
         <div class="container py-5">

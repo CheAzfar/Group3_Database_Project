@@ -1,39 +1,39 @@
 <?php
 session_start();
+include('connection.php');
 
-$user_ID = $_POST['UserID'];
-$user_Pwd = $_POST['UserPwd'];
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $username = $_POST['UserID'];
+    $password = $_POST['UserPwd'];
 
-$host = "localhost";
-$user = "root";
-$pass = "";
-$db = "database_project";
+    // Use correct table: USERS
+    $stmt = $conn->prepare("SELECT * FROM USERS WHERE UserID = ?");
+    $stmt->bind_param("s", $username);
+    $stmt->execute();
+    $result = $stmt->get_result();
 
-$conn = new mysqli($host, $user, $pass, $db);
+    // Check if user exists
+    if ($result->num_rows === 1) {
+        $row = $result->fetch_assoc();
 
-if ($conn->connect_error) {
-    die("CONNECTION FAILED: " . $conn->connect_error);
-} else {
-    $queryCheck = "SELECT * FROM USERS WHERE UserID = '" . $user_ID . "'";
-    $resultCheck = $conn->query($queryCheck);
-
-    if ($resultCheck->num_rows == 0) {
-        $_SESSION['login_error'] = "Wrong Password or Username! Please try again.";
-        header("Location: login.php");
-        exit();
-    } else {
-        while ($row = $resultCheck->fetch_assoc()) {
-            if ($row["UserPwd"] == $user_Pwd) {
-                $_SESSION["UserID"] = $user_ID; //try ni
-                $_SESSION["UserType"] = $row["UserType"];
-                header("Location: index.php");
-                exit();
-            } else {
-                $_SESSION['login_error'] = "Wrong Password or Username! Please try again.";
-                header("Location: login.php");
-                exit();
-            }
+        if ($row['UserPwd'] === $password) { // simple password check, you can use password_hash() later
+            $_SESSION['UserID'] = $username;
+            $_SESSION['UserType'] = $row['UserType'];       // e.g., 'admin' or 'customer'
+            $_SESSION['role'] = $row['UserType'];           // used by header.php logic
+            header("Location: index.php");
+            exit();
+        } else {
+            $_SESSION['login_error'] = "Incorrect password.";
+            header("Location: Login.php");
+            exit();
         }
+    } else {
+        $_SESSION['login_error'] = "Username not found.";
+        header("Location: Login.php");
+        exit();
     }
+
+    $stmt->close();
+    $conn->close();
 }
-$conn->close();
+?>

@@ -1,6 +1,5 @@
 <?php
 session_start();
-
 function getPopularDishes($conn)
 {
     // Get 3 random dishes as "popular" - modify query as needed
@@ -32,6 +31,7 @@ function getPopularDishes($conn)
     <?php
     include($_SERVER['DOCUMENT_ROOT'] . "/Group3_Database_Project/DB/content/pages/connection.php");
     include($_SERVER['DOCUMENT_ROOT'] . "/Group3_Database_Project/DB/content/pages/menu.php");
+    
     include($_SERVER['DOCUMENT_ROOT'] . "/Group3_Database_Project/DB/content/pages/header.php");
     ?>
 
@@ -252,6 +252,7 @@ function getPopularDishes($conn)
 
     <!-- Bootstrap JS Bundle with Popper (for navbar toggling) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js"></script>
+    
 </body>
 
 </html>

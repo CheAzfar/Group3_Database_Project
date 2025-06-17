@@ -1,7 +1,10 @@
 <?php 
 require_once 'db_connect.php';
 session_start();
-
+if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+    header("Location: index.php");
+    exit();
+}
 // Enable error reporting for debugging
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
@@ -189,9 +192,9 @@ $categories = [
     <title>Admin Menu Management</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/Group3_Database_Project/DB/content/css/style.css">
     <style>
-        body { background-color: #f8f9fa; padding-top: 20px; }
-        .container { background-color: white; border-radius: 10px; box-shadow: 0 0 15px rgba(0,0,0,0.1); padding: 25px; }
+        .container {padding-top: 20px;}
         .table-responsive { margin-top: 20px; }
         .img-thumbnail { max-width: 80px; max-height: 80px; }
         .form-section { background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px; }
@@ -220,6 +223,9 @@ $categories = [
     </style>
 </head>
 <body>
+    <?php
+        include($_SERVER['DOCUMENT_ROOT'] . "/Group3_Database_Project/DB/content/pages/header.php");
+    ?>
     <div class="container">
         <h1 class="mb-4 text-center">Menu Items Management</h1>
         

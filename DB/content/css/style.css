@@ -254,6 +254,35 @@
     border-top-left-radius: 10px;
     border-top-right-radius: 10px;
 }
+/* Base icon color */
+.menu-icon {
+    color: #ffffff;
+    transition: color 0.3s ease;
+}
+/* Force dropdown menu visibility and styling */
+.dropdown-menu {
+    background-color: #F4A261 !important;
+    color: #212529 !important;
+    border-radius: 0.5rem;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+}
+
+/* Dropdown items */
+.dropdown-menu .dropdown-item {
+    color: #fff !important;
+    font-weight: 500;
+}
+
+/* Icon color change */
+.dropdown-menu .dropdown-item:hover .menu-icon {
+    color: #d65b3f !important;
+}
+
+/* Fix white hover box on the entire dropdown item */
+.dropdown-menu .dropdown-item:hover {
+    background-color: transparent !important;
+    color: #d65b3f !important;
+}
 
 
 

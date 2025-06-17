@@ -6,6 +6,7 @@ if (isset($_SESSION['login_error'])) {
     $error = $_SESSION['login_error'];
     unset($_SESSION['login_error']); // Clear the error after displaying
 }
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
