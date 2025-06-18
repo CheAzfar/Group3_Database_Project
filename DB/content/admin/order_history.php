@@ -1,9 +1,9 @@
 <?php
 session_start();
 
-// Restrict access to admin only
-if (!isset($_SESSION['UserType']) || $_SESSION['UserType'] !== 'admin') {
-    header("Location: index.php");
+// Restrict access to admin and staff
+if (!isset($_SESSION['UserType']) || ($_SESSION['UserType'] !== 'admin' && $_SESSION['UserType'] !== 'staff')) {
+    header("Location: login.php");
     exit();
 }
 
@@ -57,18 +57,16 @@ $result = $conn->query($query);
             font-weight: bold;
         }
         .badge.completed {
-            background-color: #28a745;
+            background-color: #198754;
         }
         .badge.processing {
-            background-color: #ffc107;
-            color: black;
+            background-color: #0D6EFD;
         }
         .badge.pending {
-            background-color:#5cc6f6;
-            color: black;
+            background-color: #FFC107;
         }
         .badge.cancelled {
-            background-color: #dc3545;
+            background-color: #DC3545;
         }
         .btn-custom {
             background-color: #F4A261;

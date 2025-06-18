@@ -1,12 +1,9 @@
 <?php
 session_start();
 include($_SERVER['DOCUMENT_ROOT'] . "/Group3_Database_Project/DB/content/pages/connection.php");
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
-    header("Location: index.php");
-    exit();
-}
 // Authentication check
-if (!isset($_SESSION['UserID']) || $_SESSION['UserID'] !== 'Admin') {
+// Check UserID for both admin and staff
+if (!isset($_SESSION['UserType']) || ($_SESSION['UserType'] !== 'admin' && $_SESSION['UserType'] !== 'staff')) {
     header("Location: login.php");
     exit();
 }
@@ -35,11 +32,7 @@ if ($orders->num_rows > 0) {
     $firstOrderId = $orders->fetch_assoc()['OrderID'];
     $orders->data_seek(0); // Reset pointer again
 
-    $historyStmt = $conn->prepare("
-        SELECT * FROM order_status_history 
-        WHERE OrderID = ? 
-        ORDER BY ChangeDate DESC
-    ");
+    $historyStmt = $conn->prepare("SELECT * FROM order_status_history WHERE OrderID = ? ORDER BY ChangeDate DESC");
     $historyStmt->bind_param("i", $firstOrderId);
     $historyStmt->execute();
     $statusHistory = $historyStmt->get_result()->fetch_all(MYSQLI_ASSOC);
@@ -106,6 +99,12 @@ function getStatusColor($status)
     <?php
         include($_SERVER['DOCUMENT_ROOT'] . "/Group3_Database_Project/DB/content/pages/header.php");
     ?>
+    <?php if (isset($_SESSION['success_message'])): ?>
+        <div class="alert alert-success">
+            <?= $_SESSION['success_message'] ?>
+        </div>
+        <?php unset($_SESSION['success_message']); ?>
+    <?php endif; ?>
 
     <main class="flex-fill">
         <div class="container py-5">
@@ -220,7 +219,7 @@ function getStatusColor($status)
                                                     </tbody>
                                                 </table>
                                             </div>
-
+                                            
                                             <!-- Status Update Form -->
                                             <div class="mt-3">
                                                 <form method="POST" action="update_order_status.php">
@@ -260,29 +259,48 @@ function getStatusColor($status)
                             <h5 class="mb-0">Status History</h5>
                         </div>
                         <div class="card-body">
-                            <?php if (!empty($statusHistory)): ?>
+                            <?php
+                            // Fetch status history for all orders
+                             $historyStmt = $conn->prepare("
+                                SELECT osh.*, u.UserID, u.UserType 
+                                FROM order_status_history osh
+                                LEFT JOIN users u ON osh.ChangedBy = u.UserID
+                                ORDER BY osh.ChangeDate DESC
+                            ");
+                            $historyStmt->execute();
+                            $statusHistory = $historyStmt->get_result();
+                            $historyStmt->close();
+
+                            if ($statusHistory->num_rows > 0): ?>
                                 <ul class="list-group list-group-flush">
-                                    <?php foreach ($statusHistory as $history): ?>
+                                    <?php while ($history = $statusHistory->fetch_assoc()): ?>
                                         <li class="list-group-item">
                                             <div class="d-flex justify-content-between">
                                                 <span class="badge bg-<?= getStatusColor($history['OrderStatus']) ?>">
                                                     <?= ucfirst($history['OrderStatus']) ?>
                                                 </span>
-                                                <small class="text-muted">
-                                                    <?= date('M j, g:i A', strtotime($history['ChangeDate'])) ?>
-                                                </small>
+                                                <small class="text-muted"><?= date('M j, g:i A', strtotime($history['ChangeDate'])) ?></small>
                                             </div>
-                                            <small>Changed by: <?= htmlspecialchars($history['ChangedBy']) ?></small>
+                                            <small>
+                                                Order #<?= $history['OrderID'] ?> - Changed by:
+                                                <span>
+                                                    <?= htmlspecialchars($history['UserID']) ?> 
+                                                    <!-- Displaying role in parentheses -->
+                                                    <span style="color: <?= $history['UserType'] == 'admin' ? '#f4a261' : '#0D6EFD'; ?>; font-style: italic;">
+                                                        (<?= ucfirst($history['UserType']) ?>)
+                                                    </span>
+                                                </span>
+                                            </small>
                                             <?php if (!empty($history['Notes'])): ?>
                                                 <div class="mt-1">
-                                                    <small class="text-muted"><?= htmlspecialchars($history['Notes']) ?></small>
+                                                    <small class="text-muted">Note: <?= htmlspecialchars($history['Notes']) ?></small>
                                                 </div>
                                             <?php endif; ?>
                                         </li>
-                                    <?php endforeach; ?>
+                                    <?php endwhile; ?>
                                 </ul>
                             <?php else: ?>
-                                <p class="text-muted">Select an order to view status history</p>
+                                <p class="text-muted">No status history found</p>
                             <?php endif; ?>
                         </div>
                     </div>
@@ -315,5 +333,4 @@ function getStatusColor($status)
         });
     </script>
 </body>
-
 </html>

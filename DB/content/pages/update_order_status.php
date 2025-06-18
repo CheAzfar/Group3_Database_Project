@@ -3,7 +3,8 @@ session_start();
 include($_SERVER['DOCUMENT_ROOT'] . "/Group3_Database_Project/DB/content/pages/connection.php");
 
 // Authentication check
-if (!isset($_SESSION['UserID']) || $_SESSION['UserID'] !== 'Admin') {
+// Check UserID for both admin and staff
+if (!isset($_SESSION['UserType']) || ($_SESSION['UserType'] !== 'admin' && $_SESSION['UserType'] !== 'staff')) {
     header("Location: login.php");
     exit();
 }
@@ -28,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['order_id'], $_POST['n
         exit();
     }
     
-    // Update order status
+    // Update order status in the database
     $stmt = $conn->prepare("UPDATE orders SET OrderStatus = ? WHERE OrderID = ?");
     $stmt->bind_param("si", $newStatus, $orderId);
     $stmt->execute();
@@ -42,11 +43,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['order_id'], $_POST['n
     $historyStmt->bind_param("isss", $orderId, $newStatus, $_SESSION['UserID'], $notes);
     $historyStmt->execute();
     
-    // Redirect back with success message
+    // Set the success message in the session
     $_SESSION['success_message'] = "Order #$orderId status updated to " . ucfirst($newStatus);
+    
+    // Redirect back to the order management page with the success message
     header("Location: order_management.php");
     exit();
 } else {
+    // If not a POST request or missing parameters, redirect to order management
     header("Location: order_management.php");
     exit();
 }
