@@ -31,8 +31,14 @@ function getPopularDishes($conn)
     <?php
     include($_SERVER['DOCUMENT_ROOT'] . "/Group3_Database_Project/DB/content/pages/connection.php");
     include($_SERVER['DOCUMENT_ROOT'] . "/Group3_Database_Project/DB/content/pages/menu.php");
-    
     include($_SERVER['DOCUMENT_ROOT'] . "/Group3_Database_Project/DB/content/pages/header.php");
+    function searchMenuItems($conn, $keyword) {
+        $stmt = $conn->prepare("SELECT * FROM menu_items WHERE name LIKE ?");
+        $like = '%' . $keyword . '%';
+        $stmt->bind_param("s", $like);
+        $stmt->execute();
+        return $stmt->get_result();
+    }
     ?>
 
     <main class="flex-fill">
@@ -53,6 +59,57 @@ function getPopularDishes($conn)
                 </div>
             </div>
         </section>
+        <!-- Search Section -->
+        <?php if (!empty($_GET['search'])): ?>
+            <section id="searchResults" class="search-results-section py-5">
+                <div class="container">
+                    <h2 class="text-center mb-4" style="color: #f4a261;">
+                        Search Results for: "<?= htmlspecialchars($_GET['search']) ?>"
+                    </h2>
+                    <div class="row g-3">
+                        <?php
+                        $results = searchMenuItems($conn, $_GET['search']);
+                        if ($results->num_rows > 0):
+                            while ($dish = $results->fetch_assoc()):
+                                $imagePath = !empty($dish['image_url'])
+                                    ? '/Group3_Database_Project/DB/assets/' . $dish['image_url']
+                                    : '/Group3_Database_Project/DB/assets/images/menu-default.png';
+                        ?>
+                            <div class="col-md-4">
+                                <div class="card dish-card">
+                                    <img src="<?= htmlspecialchars($imagePath) ?>" class="card-img-top" alt="<?= htmlspecialchars($dish['name']) ?>">
+                                    <div class="card-body">
+                                        <h5 class="card-title"><?= htmlspecialchars($dish['name']) ?></h5>
+                                        <p class="card-text">RM <?= htmlspecialchars($dish['price']) ?></p>
+                                        <div class="d-flex gap-3 justify-content-around">
+                                            <form method="POST" action="/Group3_Database_Project/DB/content/pages/buy_now_handler.php">
+                                                <input type="hidden" name="item_id" value="<?= $dish['item_id'] ?>">
+                                                <input type="hidden" name="name" value="<?= htmlspecialchars($dish['name']) ?>">
+                                                <input type="hidden" name="price" value="<?= $dish['price'] ?>">
+                                                <input type="hidden" name="image_url" value="<?= $dish['image_url'] ?>">
+                                                <button type="submit" class="btn btn-primary btn-buy">Buy Now</button>
+                                            </form>
+
+                                            <form method="POST" action="/Group3_Database_Project/DB/content/pages/add_to_cart.php">
+                                                <input type="hidden" name="item_id" value="<?= $dish['item_id'] ?>">
+                                                <input type="hidden" name="name" value="<?= htmlspecialchars($dish['name']) ?>">
+                                                <input type="hidden" name="price" value="<?= $dish['price'] ?>">
+                                                <input type="hidden" name="image_url" value="<?= $dish['image_url'] ?>">
+                                                <button type="submit" class="btn btn-outline-primary btn-add">Add to Cart</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endwhile; else: ?>
+                            <div class="col-12 text-center">
+                                <p class="text-danger">No results found.</p>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </section>
+        <?php endif; ?>
 
         <!-- Popular Dishes Section -->
         <section class="popular-dishes mb-5" style="margin-bottom: 2% !important;">

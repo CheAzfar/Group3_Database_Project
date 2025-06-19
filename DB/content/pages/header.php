@@ -8,7 +8,7 @@ $isStaff = isset($_SESSION['UserType']) && $_SESSION['UserType'] === 'staff';
 $userID = isset($_SESSION['UserID']) ? $_SESSION['UserID'] : '';
 
 // Define pages where search should be hidden
-$hideSearchPages = ['admin_menu.php', 'order_management.php', 'order_history.php','income_report.php','cart.php','about.php'];
+$hideSearchPages = ['register.php','manage_staff.php','admin_menu.php', 'order_management.php', 'order_history.php','income_report.php','cart.php','about.php'];
 $currentPage = basename($_SERVER['PHP_SELF']);
 $hideSearch = in_array($currentPage, $hideSearchPages);
 ?>
@@ -35,8 +35,18 @@ $hideSearch = in_array($currentPage, $hideSearchPages);
                         </a>
                         <ul class="dropdown-menu">
                             <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="/Group3_Database_Project/DB/content/admin/register.php">
+                                    <i class="fa-solid fa-user-plus menu-icon"></i> Register Staff
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="/Group3_Database_Project/DB/content/admin/manage_staff.php">
+                                    <i class="fa-solid fa-users-gear menu-icon"></i> Manage Staff
+                                </a>
+                            </li>
+                            <li>
                                 <a class="dropdown-item d-flex align-items-center gap-2" href="/Group3_Database_Project/DB/content/admin/admin_menu.php">
-                                    <i class="fa-solid fa-gear menu-icon"></i> Admin Menu
+                                    <i class="fa-solid fa-utensils menu-icon"></i>Food Menu Management
                                 </a>
                             </li>
                             <li>
@@ -98,9 +108,9 @@ $hideSearch = in_array($currentPage, $hideSearchPages);
 
                 <!-- Search form (visible only on non-admin pages) -->
                 <?php if (!$hideSearch): ?>
-                <form class="d-flex mt-3 mt-lg-0 ms-lg-3" role="search">
+                <form class="d-flex mt-3 mt-lg-0 ms-lg-3" method="GET" action="/Group3_Database_Project/DB/content/pages/index.php#searchResults">
                     <div class="input-group">
-                        <input class="form-control" type="search" placeholder="Search">
+                        <input class="form-control" type="search" name="search" placeholder="Search" value="<?= htmlspecialchars($_GET['search'] ?? '') ?>">
                         <button class="btn btn-outline-dark" type="submit">Search</button>
                     </div>
                 </form>
