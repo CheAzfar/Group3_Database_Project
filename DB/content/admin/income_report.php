@@ -36,21 +36,49 @@ $stmt->execute();
 $result = $stmt->get_result();
 
 // Calculate total income
-$totalIncome = 0;
+$totalGrossIncome = 0;
+$totalRefunds = 0;
+$totalNetIncome = 0;
 $orders = [];
+
 while ($row = $result->fetch_assoc()) {
+    $isRefunded = strtolower($row['PaymentStatus']) === 'refunded';
+    $totalGrossIncome += $row['TotalAmount'];
+
+    if ($isRefunded) {
+        $totalRefunds += $row['TotalAmount'];
+        $adjustedAmount = -1 * $row['TotalAmount'];
+    } else {
+        $adjustedAmount = $row['TotalAmount'];
+    }
+
+    $totalNetIncome += $adjustedAmount;
+    $row['AdjustedAmount'] = $adjustedAmount;
     $orders[] = $row;
-    $totalIncome += $row['TotalAmount'];
 }
+
+
 
 // Prepare data for chart (line chart)
 $incomeData = [];
 foreach ($orders as $order) {
+    $adjusted = strtolower($order['PaymentStatus']) === 'refunded'
+        ? -1 * $order['TotalAmount']
+        : $order['TotalAmount'];
+    
     $incomeData[] = [
         'date' => $order['OrderDate'],
-        'totalAmount' => $order['TotalAmount']
+        'totalAmount' => $order['AdjustedAmount']
     ];
 }
+$totalRefunds = 0;
+foreach ($orders as $o) {
+    if (strtolower($o['PaymentStatus']) === 'refunded') {
+        $totalRefunds += $o['TotalAmount'];
+    }
+}
+
+
 ?>
 
 <!DOCTYPE html>
@@ -155,7 +183,12 @@ foreach ($orders as $order) {
     </form>
 
     <div id="incomeReportTable">
-        <h5>Total Income: <span class="text-success fw-bold">RM <?= number_format($totalIncome, 2) ?></span></h5>
+        <h5>
+            Gross Income: <span class="text-primary fw-bold">RM <?= number_format($totalGrossIncome, 2) ?></span><br>
+            Net Income: <span class="text-success fw-bold">RM <?= number_format($totalNetIncome, 2) ?></span><br>
+            Total Refunded: <span class="text-danger fw-bold">RM <?= number_format($totalRefunds, 2) ?></span>
+        </h5>
+
 
         <div class="table-responsive mt-3">
             <table class="table table-bordered table-striped income-table">
@@ -176,7 +209,15 @@ foreach ($orders as $order) {
                                 <td><?= htmlspecialchars($order['OrderID']) ?></td>
                                 <td><?= htmlspecialchars($order['CustName']) ?></td>
                                 <td><?= htmlspecialchars($order['OrderDate']) ?></td>
-                                <td><?= number_format($order['TotalAmount'], 2) ?></td>
+                                <td>
+                                    <?php
+                                        $amount = $order['AdjustedAmount'];
+                                        $isRefunded = strtolower($order['PaymentStatus']) === 'refunded';
+                                    ?>
+                                    <span style="color: <?= $isRefunded ? 'red' : 'inherit' ?>;">
+                                        RM <?= number_format($amount, 2) ?>
+                                    </span>
+                                </td>
                                 <td><?= htmlspecialchars($order['PaymentStatus']) ?></td>
                                 <td><?= htmlspecialchars($order['DeliveryType']) ?></td>
                             </tr>
