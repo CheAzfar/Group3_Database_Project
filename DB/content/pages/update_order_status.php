@@ -11,7 +11,7 @@ if (!isset($_SESSION['UserType']) || ($_SESSION['UserType'] !== 'admin' && $_SES
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['order_id'], $_POST['new_status'])) {
     $orderId = (int)$_POST['order_id'];
-    $newStatus = $_POST['new_status'];
+    $newStatus = strtolower(trim($_POST['new_status']));
     $notes = trim($_POST['notes'] ?? '');
     
     // Validate status
@@ -30,10 +30,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['order_id'], $_POST['n
     }
     
     // Update order status in the database
-    $stmt = $conn->prepare("UPDATE orders SET OrderStatus = ? WHERE OrderID = ?");
-    $stmt->bind_param("si", $newStatus, $orderId);
+    if ($newStatus === 'cancelled') {
+        $paymentStatus = 'refunded';
+        $stmt = $conn->prepare("UPDATE orders SET OrderStatus = ?, PaymentStatus = ? WHERE OrderID = ?");
+        $stmt->bind_param("ssi", $newStatus, $paymentStatus, $orderId);
+    } else {
+        $paymentStatus = 'paid';
+        $stmt = $conn->prepare("UPDATE orders SET OrderStatus = ?, PaymentStatus = ? WHERE OrderID = ?");
+        $stmt->bind_param("ssi", $newStatus, $paymentStatus, $orderId);
+    }
     $stmt->execute();
-    
+    $stmt->close();
+
+
     // Add to status history
     $historyStmt = $conn->prepare("
         INSERT INTO order_status_history 
