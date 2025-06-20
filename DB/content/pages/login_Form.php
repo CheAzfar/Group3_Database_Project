@@ -15,11 +15,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Check if user exists
     if ($result->num_rows === 1) {
         $row = $result->fetch_assoc();
+        $storedPassword = $row['UserPwd'];
 
-        if ($row['UserPwd'] === $password) { // simple password check, you can use password_hash() later
+        // Try password_verify first (for hashed passwords)
+        // If that fails, try direct comparison (for plain text passwords)
+        $passwordMatch = password_verify($password, $storedPassword) || ($storedPassword === $password);
+
+        if ($passwordMatch) {
             $_SESSION['UserID'] = $username;
-            $_SESSION['UserType'] = $row['UserType'];       // e.g., 'admin' or 'customer'
-            $_SESSION['role'] = $row['UserType'];           // used by header.php logic
+            $_SESSION['UserType'] = $row['UserType'];
+            $_SESSION['role'] = $row['UserType'];
             header("Location: index.php");
             exit();
         } else {
@@ -36,4 +41,3 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $stmt->close();
     $conn->close();
 }
-?>
