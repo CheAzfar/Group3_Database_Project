@@ -8,7 +8,7 @@ $isStaff = isset($_SESSION['UserType']) && $_SESSION['UserType'] === 'staff';
 $userID = isset($_SESSION['UserID']) ? $_SESSION['UserID'] : '';
 
 // Define pages where search should be hidden
-$hideSearchPages = ['register.php','manage_staff.php','admin_menu.php', 'order_management.php', 'order_history.php','income_report.php','cart.php','about.php'];
+$hideSearchPages = ['register.php','manage_staff.php','admin_menu.php', 'order_management.php', 'order_history.php','order_confirmation.php','income_report.php','cart.php','about.php'];
 $currentPage = basename($_SERVER['PHP_SELF']);
 $hideSearch = in_array($currentPage, $hideSearchPages);
 ?>
