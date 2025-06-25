@@ -130,9 +130,11 @@ $result = $conn->query($query);
         <div class="col-md-2">
             <input type="date" name="date" class="form-control" value="<?= htmlspecialchars($dateFilter) ?>">
         </div>
-        <div class="col-md-2">
-            <button type="submit" class="btn btn-warning w-100">Filter</button>
-        </div>
+        <div class="col-md-3 d-flex gap-2 align-items-end">
+    <button type="submit" class="btn btn-warning w-50">Filter</button>
+    <a href="order_history.php" class="btn btn-secondary w-50">Clear</a>
+</div>
+
     </form>
 
     <div id="printArea">
