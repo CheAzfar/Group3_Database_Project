@@ -43,40 +43,40 @@ $orders = [];
 
 while ($row = $result->fetch_assoc()) {
     $isRefunded = strtolower($row['PaymentStatus']) === 'refunded';
-    $totalGrossIncome += $row['TotalAmount'];
+
+    $totalGrossIncome += $row['TotalAmount']; // Only once
 
     if ($isRefunded) {
         $totalRefunds += $row['TotalAmount'];
-        $adjustedAmount = -1 * $row['TotalAmount'];
-    } else {
-        $adjustedAmount = $row['TotalAmount'];
     }
 
-    $totalNetIncome += $adjustedAmount;
-    $row['AdjustedAmount'] = $adjustedAmount;
     $orders[] = $row;
 }
+
+// Only calculate once after the loop
+$totalNetIncome = $totalGrossIncome - $totalRefunds;
+
 
 
 
 // Prepare data for chart (line chart)
 $incomeData = [];
 foreach ($orders as $order) {
-    $adjusted = strtolower($order['PaymentStatus']) === 'refunded'
-        ? -1 * $order['TotalAmount']
-        : $order['TotalAmount'];
-    
+    $isRefunded = strtolower($order['PaymentStatus']) === 'refunded';
+    $adjusted = $isRefunded ? -1 * $order['TotalAmount'] : $order['TotalAmount'];
+
     $incomeData[] = [
         'date' => $order['OrderDate'],
-        'totalAmount' => $order['AdjustedAmount']
+        'totalAmount' => $adjusted
     ];
 }
-$totalRefunds = 0;
-foreach ($orders as $o) {
-    if (strtolower($o['PaymentStatus']) === 'refunded') {
-        $totalRefunds += $o['TotalAmount'];
-    }
-}
+
+// Sort the array by date
+usort($incomeData, function($a, $b) {
+    return strtotime($a['date']) <=> strtotime($b['date']);
+});
+
+
 
 
 ?>
@@ -152,24 +152,24 @@ foreach ($orders as $o) {
         </div>
     </div>
 
-    <form method="GET" class="row g-3 align-items-end mb-4">
-        <div class="col-md-3">
+    <form method="GET" class="d-flex flex-wrap gap-2 align-items-end mb-4">
+        <div class="flex-grow-1" style="max-width: 180px;">
             <label class="form-label">Start Date</label>
             <input type="date" name="start_date" class="form-control" value="<?= htmlspecialchars($startDate) ?>">
         </div>
-        <div class="col-md-3">
+        <div class="flex-grow-1" style="max-width: 180px;">
             <label class="form-label">End Date</label>
             <input type="date" name="end_date" class="form-control" value="<?= htmlspecialchars($endDate) ?>">
         </div>
-        <div class="col-md-2">
+        <div class="flex-grow-1" style="max-width: 180px;">
             <label class="form-label">Payment Status</label>
             <select name="payment_status" class="form-select">
                 <option value="">All</option>
                 <option value="paid" <?= $paymentStatus === 'paid' ? 'selected' : '' ?>>Paid</option>
-                <option value="unpaid" <?= $paymentStatus === 'unpaid' ? 'selected' : '' ?>>Unpaid</option>
+                <option value="refunded" <?= $paymentStatus === 'refunded' ? 'selected' : '' ?>>Refunded</option>
             </select>
         </div>
-        <div class="col-md-2">
+        <div class="flex-grow-1" style="max-width: 180px;">
             <label class="form-label">Delivery Type</label>
             <select name="delivery_type" class="form-select">
                 <option value="">All</option>
@@ -177,10 +177,18 @@ foreach ($orders as $o) {
                 <option value="takeaway" <?= $deliveryType === 'takeaway' ? 'selected' : '' ?>>Takeaway</option>
             </select>
         </div>
-        <div class="col-md-2">
-            <button type="submit" class="btn btn-warning w-100">Filter</button>
+        <div class="d-flex gap-2">
+            <div>
+                <label class="form-label d-block">&nbsp;</label>
+                <button type="submit" class="btn btn-warning">Filter</button>
+            </div>
+            <div>
+                <label class="form-label d-block">&nbsp;</label>
+                <a href="income_report.php" class="btn btn-secondary">Clear</a>
+            </div>
         </div>
     </form>
+
 
     <div id="incomeReportTable">
         <h5>
@@ -211,8 +219,8 @@ foreach ($orders as $o) {
                                 <td><?= htmlspecialchars($order['OrderDate']) ?></td>
                                 <td>
                                     <?php
-                                        $amount = $order['AdjustedAmount'];
                                         $isRefunded = strtolower($order['PaymentStatus']) === 'refunded';
+                                        $amount = $isRefunded ? -1 * $order['TotalAmount'] : $order['TotalAmount'];
                                     ?>
                                     <span style="color: <?= $isRefunded ? 'red' : 'inherit' ?>;">
                                         RM <?= number_format($amount, 2) ?>
@@ -237,7 +245,11 @@ foreach ($orders as $o) {
     
     // Assuming you already have your income data as arrays for each month (example)
     const incomeData = <?php echo json_encode($incomeData); ?>; // Example array from PHP
-    const labels = incomeData.map(item => item.date); // Assuming your data has a date field
+    const labels = incomeData.map(item => {
+        const date = new Date(item.date);
+        return date.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+    });
+
     const incomes = incomeData.map(item => item.totalAmount); // Assuming your data has an amount field
 
     // Create the line chart

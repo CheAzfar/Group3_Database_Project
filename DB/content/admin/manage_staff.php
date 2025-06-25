@@ -26,24 +26,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_id'])) {
     $userID = trim($_POST['update_id']);
     $newUsername = trim($_POST['username']);
     $newPassword = trim($_POST['new_password']);
+    $confirmPassword = trim($_POST['confirm_password']);
+    $error = '';
 
     if (!empty($newPassword)) {
-        $hashedPassword = password_hash($newPassword, PASSWORD_BCRYPT);
-        $stmt = $conn->prepare("UPDATE users SET UserID = ?, UserPwd = ? WHERE UserID = ? AND UserType = 'staff'");
-        $stmt->bind_param("sss", $newUsername, $hashedPassword, $userID);
+        if ($newPassword !== $confirmPassword) {
+            $error = "Passwords do not match.";
+        } elseif (!preg_match('/^[A-Z]/', $newPassword) || !preg_match('/[a-z]/', $newPassword) || !preg_match('/\d/', $newPassword) || strlen($newPassword) < 8) {
+            $error = "Password must start with a capital letter, include lowercase, a number, and be at least 8 characters.";
+        } else {
+            $hashedPassword = password_hash($newPassword, PASSWORD_BCRYPT);
+            $stmt = $conn->prepare("UPDATE users SET UserID = ?, UserPwd = ? WHERE UserID = ? AND UserType = 'staff'");
+            $stmt->bind_param("sss", $newUsername, $hashedPassword, $userID);
+        }
     } else {
         $stmt = $conn->prepare("UPDATE users SET UserID = ? WHERE UserID = ? AND UserType = 'staff'");
         $stmt->bind_param("ss", $newUsername, $userID);
     }
 
-    if ($stmt->execute()) {
-        $success = "Staff user updated successfully.";
-    } else {
-        $error = "Failed to update staff user.";
+    if (empty($error)) {
+        if ($stmt->execute()) {
+            $success = "Staff user updated successfully.";
+        } else {
+            $error = "Failed to update staff user.";
+        }
+        $stmt->close();
     }
-
-    $stmt->close();
 }
+
 
 // Handle search
 $search = $_GET['search'] ?? '';
@@ -125,7 +135,13 @@ if (!empty($search)) {
                     <form method="POST">
                         <td><?= htmlspecialchars($row['UserID']) ?></td>
                         <td><input type="text" name="username" value="<?= htmlspecialchars($row['UserID']) ?>" class="form-control" required></td>
-                        <td><input type="password" name="new_password" class="form-control" placeholder="Leave blank to keep password"></td>
+                        <td>
+                            <input type="password" name="new_password" class="form-control password-field" placeholder="New password">
+                            <div class="text-muted small password-strength"></div>
+                            <input type="password" name="confirm_password" class="form-control mt-1 confirm-password-field" placeholder="Confirm password">
+                            <div class="text-danger small password-error"></div>
+                        </td>
+
                         <td class="d-flex gap-2">
                             <input type="hidden" name="update_id" value="<?= $row['UserID'] ?>">
                             <button type="submit" class="btn btn-custom btn-sm">Update</button>
@@ -142,4 +158,63 @@ if (!empty($search)) {
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+    <script>
+        document.querySelectorAll('form').forEach(form => {
+            const passwordField = form.querySelector('.password-field');
+            const confirmPasswordField = form.querySelector('.confirm-password-field');
+            const errorBox = form.querySelector('.password-error');
+            const strengthBox = form.querySelector('.password-strength');
+            const submitBtn = form.querySelector('button[type="submit"]');
+
+            if (passwordField && confirmPasswordField) {
+                form.addEventListener('submit', function (e) {
+                    const password = passwordField.value.trim();
+                    const confirmPassword = confirmPasswordField.value.trim();
+
+                    if (password !== '' || confirmPassword !== '') {
+                        const startsWithCapital = /^[A-Z]/.test(password);
+                        const hasLowercase = /[a-z]/.test(password);
+                        const hasNumber = /\d/.test(password);
+                        const minLength = password.length >= 8;
+
+                        if (!startsWithCapital || !hasLowercase || !hasNumber || !minLength) {
+                            errorBox.textContent = "Password must start with a capital letter, include lowercase, a number, and be at least 8 characters.";
+                            e.preventDefault();
+                            return;
+                        }
+
+                        if (password !== confirmPassword) {
+                            errorBox.textContent = "Passwords do not match.";
+                            e.preventDefault();
+                            return;
+                        }
+                    }
+
+                    errorBox.textContent = ""; // Clear errors
+                });
+
+                // Live password strength check
+                passwordField.addEventListener('input', function () {
+                    const pwd = passwordField.value;
+                    const strength = getStrength(pwd);
+                    strengthBox.textContent = `Strength: ${strength.label}`;
+                    strengthBox.style.color = strength.color;
+                });
+            }
+
+            function getStrength(password) {
+                let score = 0;
+                if (password.length >= 8) score++;
+                if (/[A-Z]/.test(password)) score++;
+                if (/[a-z]/.test(password)) score++;
+                if (/\d/.test(password)) score++;
+                if (/[\W]/.test(password)) score++;
+
+                if (score >= 4) return { label: "Strong", color: "green" };
+                if (score === 3) return { label: "Medium", color: "orange" };
+                if (score > 0) return { label: "Weak", color: "red" };
+                return { label: "", color: "inherit" };
+            }
+        });
+    </script>
 </html>

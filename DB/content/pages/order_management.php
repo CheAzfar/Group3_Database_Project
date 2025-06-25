@@ -7,6 +7,14 @@ if (!isset($_SESSION['UserType']) || ($_SESSION['UserType'] !== 'admin' && $_SES
     header("Location: login.php");
     exit();
 }
+// Sorting logic
+$orderBy = $_GET['order_by'] ?? 'OrderDate'; // default sort field
+$sortDir = ($_GET['sort_dir'] ?? 'desc') === 'asc' ? 'ASC' : 'DESC';
+
+$allowedOrderFields = ['OrderID', 'OrderDate'];
+if (!in_array($orderBy, $allowedOrderFields)) {
+    $orderBy = 'OrderDate'; // fallback
+}
 
 // Status filter
 $statusFilter = $_GET['status'] ?? 'all';
@@ -22,7 +30,7 @@ $orders = $conn->query("
            (SELECT SUM(Subtotal) FROM order_items WHERE OrderID = o.OrderID) AS calculated_total
     FROM orders o
     $whereClause
-    ORDER BY o.OrderDate DESC
+    ORDER BY o.$orderBy $sortDir
 ");
 
 // Get status history for the first order (for demo)
@@ -55,6 +63,30 @@ function getStatusColor($status)
             return 'secondary';
     }
 }
+//Search
+$searchTerm = $_GET['search_term'] ?? '';
+$whereClauses = [];
+
+if ($statusFilter !== 'all') {
+    $whereClauses[] = "o.OrderStatus = '" . $conn->real_escape_string($statusFilter) . "'";
+}
+
+if (!empty($searchTerm)) {
+    $safeSearch = $conn->real_escape_string($searchTerm);
+    $whereClauses[] = "(o.OrderID LIKE '%$safeSearch%' OR o.CustName LIKE '%$safeSearch%')";
+}
+
+$whereClause = !empty($whereClauses) ? "WHERE " . implode(" AND ", $whereClauses) : '';
+$orders = $conn->query("
+    SELECT o.*, 
+           (SELECT COUNT(*) FROM order_items WHERE OrderID = o.OrderID) AS item_count,
+           (SELECT SUM(Subtotal) FROM order_items WHERE OrderID = o.OrderID) AS calculated_total
+    FROM orders o
+    $whereClause
+    ORDER BY o.$orderBy $sortDir
+");
+
+
 ?>
 
 <!DOCTYPE html>
@@ -110,6 +142,29 @@ function getStatusColor($status)
         <div class="container py-5">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h2>Order Management</h2>
+                <!-- Search Orders -->
+                <form class="d-flex align-items-end flex-wrap gap-2" method="GET" action="">
+                    <input type="hidden" name="status" value="<?= htmlspecialchars($statusFilter) ?>">
+
+                    <input type="text" name="search_term" class="form-control form-control-sm" style="width: 180px;" placeholder="Order ID" value="<?= htmlspecialchars($_GET['search_term'] ?? '') ?>">
+
+                    <select name="order_by" class="form-select form-select-sm" style="width: 140px;">
+                        <option value="OrderDate" <?= ($_GET['order_by'] ?? '') === 'OrderDate' ? 'selected' : '' ?>>Order Date</option>
+                        <option value="OrderID" <?= ($_GET['order_by'] ?? '') === 'OrderID' ? 'selected' : '' ?>>Order Number</option>
+                    </select>
+
+                    <select name="sort_dir" class="form-select form-select-sm" style="width: 120px;">
+                        <option value="desc" <?= ($_GET['sort_dir'] ?? '') === 'desc' ? 'selected' : '' ?>>Descending</option>
+                        <option value="asc" <?= ($_GET['sort_dir'] ?? '') === 'asc' ? 'selected' : '' ?>>Ascending</option>
+                    </select>
+
+                    <button type="submit" class="btn btn-warning btn-sm"><i class="fas fa-search"></i></button>
+                    <a href="order_management.php" class="btn btn-outline-secondary btn-sm">
+                        Clear
+                    </a>
+                </form>
+
+
                 <div class="dropdown">
                     <button class="btn btn-outline-warning dropdown-toggle" type="button" id="filterDropdown" data-bs-toggle="dropdown">
                         <i class="fas fa-filter"></i> Filter Orders

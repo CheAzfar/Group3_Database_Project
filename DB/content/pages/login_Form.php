@@ -6,38 +6,41 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = $_POST['UserID'];
     $password = $_POST['UserPwd'];
 
-    // Use correct table: USERS
+    // Always return a generic error message
+    $loginErrorMsg = "Invalid username or password.";
+
+    // Prepare query
     $stmt = $conn->prepare("SELECT * FROM USERS WHERE UserID = ?");
     $stmt->bind_param("s", $username);
     $stmt->execute();
     $result = $stmt->get_result();
 
-    // Check if user exists
+    // Default to failed
+    $loginSuccess = false;
+
     if ($result->num_rows === 1) {
         $row = $result->fetch_assoc();
         $storedPassword = $row['UserPwd'];
 
-        // Try password_verify first (for hashed passwords)
-        // If that fails, try direct comparison (for plain text passwords)
-        $passwordMatch = password_verify($password, $storedPassword) || ($storedPassword === $password);
+        // Check using password_verify (preferred), fallback only if needed
+        if (password_verify($password, $storedPassword) || $password === $storedPassword) {
+            // Password matches
+            $loginSuccess = true;
 
-        if ($passwordMatch) {
             $_SESSION['UserID'] = $username;
             $_SESSION['UserType'] = $row['UserType'];
             $_SESSION['role'] = $row['UserType'];
             header("Location: index.php");
             exit();
-        } else {
-            $_SESSION['login_error'] = "Incorrect password.";
-            header("Location: Login.php");
-            exit();
         }
-    } else {
-        $_SESSION['login_error'] = "Username not found.";
-        header("Location: Login.php");
-        exit();
     }
+
+    // On failure
+    $_SESSION['login_error'] = $loginErrorMsg;
+    header("Location: Login.php");
+    exit();
 
     $stmt->close();
     $conn->close();
 }
+?>

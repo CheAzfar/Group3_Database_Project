@@ -159,7 +159,8 @@ $itemStmt->close();
                                     <?php if ($order['DeliveryType'] === 'dine-in'): ?>
                                         Please proceed to your table (Table <?= $order['TableNo'] ?>). Your order is being prepared and will be served shortly.
                                     <?php else: ?>
-                                        Your takeaway order is being prepared. Please wait for your order to be ready for pickup.
+                                        <p>Your takeaway order is being prepared. Please wait for your order to be ready for pickup.</p>
+                                        <b><p>Please Remember to Print Receipt!!!</p></b>
                                     <?php endif; ?>
                                 </p>
                             </div>
